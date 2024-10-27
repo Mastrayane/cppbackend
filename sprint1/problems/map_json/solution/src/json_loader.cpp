@@ -1,13 +1,13 @@
 #include "json_loader.h"
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 namespace json_loader {
 
     namespace json = boost::json;
 
     model::Game LoadGame(const std::filesystem::path& json_path) {
-        // Загрузить содержимое файла json_path, например, в виде строки
         std::ifstream file(json_path);
         if (!file.is_open()) {
             throw std::runtime_error("Failed to open file: " + json_path.string());
@@ -17,10 +17,7 @@ namespace json_loader {
         buffer << file.rdbuf();
         std::string json_content = buffer.str();
 
-        // Распарсить строку как JSON, используя boost::json::parse
         json::value json_value = json::parse(json_content);
-
-        // Загрузить модель игры из файла
         model::Game game;
 
         if (json_value.is_object() && json_value.as_object().contains("maps")) {
@@ -33,6 +30,8 @@ namespace json_loader {
                     model::Map::Id map_id{ map_obj.at("id").as_string().c_str() };
                     std::string map_name = map_obj.at("name").as_string().c_str();
                     model::Map map(map_id, map_name);
+
+                    std::cout << "Loading map: " << *map.GetId() << " - " << map.GetName() << std::endl;
 
                     // Загрузка дорог
                     if (map_obj.contains("roads")) {

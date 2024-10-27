@@ -57,8 +57,19 @@ namespace http_handler {
 
         template <typename Send>
         void HandleGetMapById(std::string_view mapId, Send&& send) {
-            if (auto mapPtr = game_.FindMap(model::Map::Id{ std::string(mapId) }); mapPtr) {
+            std::cout << "Handling request for map: " << mapId << std::endl;
+
+            // Удаляем лишние символы, такие как '/'
+            std::string cleanedMapId(mapId);
+            cleanedMapId.erase(std::remove(cleanedMapId.begin(), cleanedMapId.end(), '/'), cleanedMapId.end());
+
+            model::Map::Id id{ cleanedMapId };
+            std::cout << "Searching for map with id: " << *id << std::endl;
+
+            if (auto mapPtr = game_.FindMap(id); mapPtr) {
                 const auto& map = *mapPtr;
+                std::cout << "Found map: " << *map.GetId() << " - " << map.GetName() << std::endl;
+
                 json::object mapJson = {
                     {"id", *map.GetId()},
                     {"name", map.GetName()},
@@ -111,6 +122,7 @@ namespace http_handler {
                 send(std::move(res));
             }
             else {
+                std::cout << "Map not found: " << cleanedMapId << std::endl;
                 SendNotFound(std::forward<Send>(send));
             }
         }
