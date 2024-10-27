@@ -57,7 +57,7 @@ namespace http_handler {
 
         template <typename Send>
         void HandleGetMapById(std::string_view mapId, Send&& send) {
-            if (auto mapPtr = game_.FindMap(model::Map::Id{ mapId }); mapPtr) {
+            if (auto mapPtr = game_.FindMap(model::Map::Id{ std::string(mapId) }); mapPtr) {
                 const auto& map = *mapPtr;
                 json::object mapJson = {
                     {"id", *map.GetId()},
