@@ -45,10 +45,10 @@ namespace http_handler {
         model::Game& game_;
     };
 
-    // Шаблонные методы определяем в заголовочном файле
+    // Шаблонные методы должны быть полностью определены в заголовочном файле
     template <typename Body, typename Allocator, typename Send>
     void RequestHandler::operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
-        
+        // Обработать запрос request и отправить ответ, используя send
         if (req.method() == http::verb::get) {
             if (req.target() == "/api/v1/maps") {
                 HandleGetMaps(std::forward<Send>(send));
@@ -69,7 +69,10 @@ namespace http_handler {
     void RequestHandler::HandleGetMaps(Send&& send) {
         json::array mapsJson;
         for (const auto& map : game_.GetMaps()) {
-            mapsJson.emplace_back(SerializeMap(map));
+            mapsJson.emplace_back(json::object{
+                {"id", *map.GetId()},
+                {"name", map.GetName()}
+                });
         }
 
         SendJsonResponse(http::status::ok, mapsJson, std::forward<Send>(send));
