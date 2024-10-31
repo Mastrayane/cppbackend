@@ -8,6 +8,12 @@ namespace json_loader {
     namespace json = boost::json;
 
     model::Game LoadGame(const std::filesystem::path& json_path) {
+
+        // Проверяем, существует ли путь и является ли он файлом
+        if (!std::filesystem::exists(json_path) || !std::filesystem::is_regular_file(json_path)) {
+            throw std::runtime_error("Invalid file path: " + json_path.string());
+        }
+
         std::string json_content = detail::ReadFileContent(json_path);
         json::value json_value = json::parse(json_content);
         model::Game game;
@@ -40,6 +46,7 @@ namespace json_loader {
     namespace detail {
 
         std::string ReadFileContent(const std::filesystem::path& json_path) {
+
             std::ifstream file(json_path);
             if (!file.is_open()) {
                 throw std::runtime_error("Failed to open file: " + json_path.string());

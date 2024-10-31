@@ -18,9 +18,7 @@ namespace http_server {
     namespace http = beast::http;
     namespace sys = boost::system;
 
-    inline void ReportError(beast::error_code ec, std::string_view what) {
-        std::cerr << what << ": "sv << ec.message() << std::endl;
-    }
+    inline void ReportError(beast::error_code ec, std::string_view what);
 
     class SessionBase {
 
@@ -32,9 +30,7 @@ namespace http_server {
 
     protected:
 
-        explicit SessionBase(tcp::socket&& socket)
-            : stream_(std::move(socket)) {
-        }
+        SessionBase(tcp::socket&& socket);
 
         using HttpRequest = http::request<http::string_body>;
 
@@ -54,51 +50,16 @@ namespace http_server {
 
     private:
 
-        void OnWrite(bool close, beast::error_code ec, [[maybe_unused]] std::size_t bytes_written) {
-            if (ec) {
-                return ReportError(ec, "write"sv);
-            }
+        void Read();
+        void Close();
+        void OnWrite(bool close, beast::error_code ec, 
+                     [[maybe_unused]] std::size_t bytes_written);
 
-            if (close) {
-                // Семантика ответа требует закрыть соединение
-                return Close();
-            }
-
-            // Считываем следующий запрос
-            Read();
-        }
-
-        void Read() {
-            using namespace std::literals;
-            // Очищаем запрос от прежнего значения (метод Read может быть вызван несколько раз)
-            request_ = {};
-            stream_.expires_after(30s);
-            // Считываем request_ из stream_, используя buffer_ для хранения считанных данных
-            http::async_read(stream_, buffer_, request_,
-                // По окончании операции будет вызван метод OnRead
-                beast::bind_front_handler(&SessionBase::OnRead, GetSharedThis()));
-        }
-
-        void OnRead(beast::error_code ec, [[maybe_unused]] std::size_t bytes_read) {
-            using namespace std::literals;
-            if (ec == http::error::end_of_stream) {
-                // Нормальная ситуация - клиент закрыл соединение
-                return Close();
-            }
-            if (ec) {
-                return ReportError(ec, "read"sv);
-            }
-            HandleRequest(std::move(request_));
-        }
-
-        void Close() {
-            beast::error_code ec;
-            stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
-        }
-
+        void OnRead(beast::error_code ec,
+                    [[maybe_unused]] std::size_t bytes_read);
+        
         // Обработку запроса делегируем подклассу
         virtual void HandleRequest(HttpRequest&& request) = 0;
-
         virtual std::shared_ptr<SessionBase> GetSharedThis() = 0;
 
         // tcp_stream содержит внутри себя сокет и добавляет поддержку таймаутов
@@ -106,6 +67,8 @@ namespace http_server {
         beast::flat_buffer buffer_;
         HttpRequest request_;
     };
+
+
 
     template <typename RequestHandler>
     class Session : public SessionBase, public std::enable_shared_from_this<Session<RequestHandler>> {
@@ -140,7 +103,9 @@ namespace http_server {
 
     template <typename RequestHandler>
     class Listener : public std::enable_shared_from_this<Listener<RequestHandler>> {
+
     public:
+
         template <typename Handler>
         Listener(net::io_context& ioc, const tcp::endpoint& endpoint, Handler&& request_handler)
             : ioc_(ioc)
