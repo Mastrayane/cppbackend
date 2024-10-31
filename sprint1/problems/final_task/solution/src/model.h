@@ -6,7 +6,7 @@
 #include "tagged.h"
 
 namespace http_handler {
-    class IVisitor;
+    class ISerializer;
 }
 
 namespace model {
@@ -71,7 +71,7 @@ namespace model {
         }
 
         // Метод Accept для паттерна "Посетитель"
-        void Accept(http_handler::IVisitor& visitor) const;
+        void Accept(http_handler::ISerializer& serializer) const;
 
     private:
         Point start_;
@@ -89,7 +89,7 @@ namespace model {
         }
 
         // Метод Accept для паттерна "Посетитель"
-        void Accept(http_handler::IVisitor& visitor) const;
+        void Accept(http_handler::ISerializer& serializer) const;
 
     private:
         Rectangle bounds_;
@@ -118,7 +118,7 @@ namespace model {
         }
 
         // Метод Accept для паттерна "Посетитель"
-        void Accept(http_handler::IVisitor& visitor) const;
+        void Accept(http_handler::ISerializer& serializer) const;
 
     private:
         Id id_;

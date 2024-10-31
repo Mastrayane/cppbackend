@@ -1,5 +1,5 @@
 #include "model.h"
-#include "visitor.h"  // Добавляем заголовок для интерфейса IVisitor
+#include "serializer.h"
 
 #include <stdexcept>
 
@@ -40,16 +40,16 @@ namespace model {
     }
 
     // Определения методов Accept для классов Road, Building и Office
-    void Road::Accept(http_handler::IVisitor& visitor) const {
-        visitor.Visit(*this);
+    void Road::Accept(http_handler::ISerializer& serializer) const {
+        serializer.Serialize(*this);
     }
 
-    void Building::Accept(http_handler::IVisitor& visitor) const {
-        visitor.Visit(*this);
+    void Building::Accept(http_handler::ISerializer& serializer) const {
+        serializer.Serialize(*this);
     }
 
-    void Office::Accept(http_handler::IVisitor& visitor) const {
-        visitor.Visit(*this);
+    void Office::Accept(http_handler::ISerializer& serializer) const {
+        serializer.Serialize(*this);
     }
 
 }  // namespace model

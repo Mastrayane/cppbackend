@@ -1,12 +1,12 @@
 #include "request_handler.h"
 #include <iostream>
 #include <algorithm>
-#include "visitor.h"
+#include "serializer.h"
 
 namespace http_handler {
 
     json::object RequestHandler::SerializeMap(const model::Map& map) {
-        json::object mapJson = {
+        json::object serializedMap = {
             {"id", *map.GetId()},
             {"name", map.GetName()},
             {"roads", json::array()},
@@ -14,21 +14,21 @@ namespace http_handler {
             {"offices", json::array()}
         };
 
-        JsonVisitor visitor(mapJson);
+        JsonSerializer serializer(serializedMap);
 
         for (const auto& road : map.GetRoads()) {
-            road.Accept(visitor);
+            road.Accept(serializer);
         }
 
         for (const auto& building : map.GetBuildings()) {
-            building.Accept(visitor);
+            building.Accept(serializer);
         }
 
         for (const auto& office : map.GetOffices()) {
-            office.Accept(visitor);
+            office.Accept(serializer);
         }
 
-        return mapJson;
+        return serializedMap;
     }
 
 }  // namespace http_handler
