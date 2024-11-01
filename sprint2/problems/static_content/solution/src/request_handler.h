@@ -62,15 +62,21 @@ namespace http_handler {
     void RequestHandler::operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
         std::string decodedTarget = utils::UrlDecode(std::string(req.target()));
 
+        // Вывод декодированного URL в консоль
+        std::cout << "operator(): Decoded target: " << decodedTarget << std::endl;
+
         if (req.method() == http::verb::get || req.method() == http::verb::head) {
             if (decodedTarget.starts_with("/api/")) {
+                std::cout << "operator(): Handling API request: " << decodedTarget << std::endl;
                 HandleApiRequest(std::forward<decltype(req)>(req), std::forward<Send>(send));
             }
             else {
+                std::cout << "operator(): Handling static request: " << decodedTarget << std::endl;
                 HandleStaticRequest(std::forward<decltype(req)>(req), std::forward<Send>(send));
             }
         }
         else {
+            std::cout << "operator(): Bad request: " << decodedTarget << std::endl;
             SendBadRequest(std::forward<Send>(send));
         }
     }
@@ -78,7 +84,16 @@ namespace http_handler {
     template <typename Send>
     void RequestHandler::HandleStaticRequest(http::request<http::string_body>&& req, Send&& send) {
         std::string decoded_target = utils::UrlDecode(std::string(req.target()));
-        std::filesystem::path file_path = static_root_ / decoded_target;
+
+        // Вывод декодированного URL в консоль
+        std::cout << "HandleStaticRequest: Decoded target: " << decoded_target << std::endl;
+
+        // Исправление объединения пути
+        std::filesystem::path file_path = static_root_ / decoded_target.substr(1); // Убираем первый символ '/'
+        file_path = file_path.make_preferred(); // Нормализуем путь
+
+        // Вывод пути к файлу перед проверкой его существования
+        std::cout << "HandleStaticRequest: File path: " << file_path << std::endl;
 
         if (std::filesystem::is_directory(file_path)) {
             file_path /= "index.html";
@@ -86,17 +101,22 @@ namespace http_handler {
 
         // Проверка, что файл находится в корневом каталоге
         if (!file_path.string().starts_with(static_root_.string())) {
+            std::cout << "HandleStaticRequest: File path is outside the static root directory" << std::endl;
             SendBadRequest(std::forward<Send>(send));
             return;
         }
 
+        // Вывод результата проверки существования файла
         if (!std::filesystem::exists(file_path) || !std::filesystem::is_regular_file(file_path)) {
+            std::cout << "HandleStaticRequest: File not found: " << file_path << std::endl;
             SendNotFoundPlainText(std::forward<Send>(send));
             return;
         }
 
+        // Вывод результата открытия файла
         std::ifstream file(file_path, std::ios::binary);
         if (!file) {
+            std::cout << "HandleStaticRequest: Failed to open file: " << file_path << std::endl;
             SendNotFoundPlainText(std::forward<Send>(send));
             return;
         }
@@ -104,8 +124,10 @@ namespace http_handler {
         std::stringstream file_content;
         file_content << file.rdbuf();
 
+        // Вывод MIME-типа файла
         std::string extension = file_path.extension().string();
         std::string mime_type = utils::GetMimeType(extension);
+        std::cout << "HandleStaticRequest: File extension: " << extension << ", MIME type: " << mime_type << std::endl;
 
         http::response<http::string_body> res{ http::status::ok, req.version() };
         res.set(http::field::content_type, mime_type);
