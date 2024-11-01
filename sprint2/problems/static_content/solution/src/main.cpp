@@ -52,7 +52,7 @@ int main(int argc, const char* argv[]) {
         http_handler::RequestHandler handler{ game, argv[2] };
 
         const auto address = net::ip::make_address("0.0.0.0");
-        constexpr net::ip::port_type port = 8080;
+        constexpr net::ip::port_type port = 8081;
 
         std::cout << "Hello! Server is starting at port " << port << std::endl;
         http_server::ServeHttp(ioc, { address, port }, [&handler](auto&& req, auto&& send) {

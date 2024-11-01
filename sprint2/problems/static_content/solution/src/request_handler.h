@@ -82,18 +82,33 @@ namespace http_handler {
         }
 
         if (!std::filesystem::exists(file_path) || !std::filesystem::is_regular_file(file_path)) {
-            SendNotFound(std::forward<Send>(send));
+            http::response<http::string_body> res{ http::status::not_found, req.version() };
+            res.set(http::field::content_type, "text/plain");
+            res.body() = "File not found";
+            res.content_length(res.body().size());
+            res.prepare_payload();
+            send(std::move(res));
             return;
         }
 
         if (!file_path.string().starts_with(static_root_.string())) {
-            SendBadRequest(std::forward<Send>(send));
+            http::response<http::string_body> res{ http::status::bad_request, req.version() };
+            res.set(http::field::content_type, "text/plain");
+            res.body() = "Bad request";
+            res.content_length(res.body().size());
+            res.prepare_payload();
+            send(std::move(res));
             return;
         }
 
         std::ifstream file(file_path, std::ios::binary);
         if (!file) {
-            SendNotFound(std::forward<Send>(send));
+            http::response<http::string_body> res{ http::status::not_found, req.version() };
+            res.set(http::field::content_type, "text/plain");
+            res.body() = "File not found";
+            res.content_length(res.body().size());
+            res.prepare_payload();
+            send(std::move(res));
             return;
         }
 
