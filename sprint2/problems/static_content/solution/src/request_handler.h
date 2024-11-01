@@ -44,6 +44,9 @@ namespace http_handler {
         void SendNotFound(Send&& send);
 
         template <typename Send>
+        void SendNotFoundPlainText(Send&& send);
+
+        template <typename Send>
         void SendJsonResponse(http::status status, const json::value& jsonValue, Send&& send);
 
         template <typename Send>
@@ -80,7 +83,7 @@ namespace http_handler {
         }
 
         if (!std::filesystem::exists(file_path) || !std::filesystem::is_regular_file(file_path)) {
-            SendNotFound(std::forward<Send>(send));
+            SendNotFoundPlainText(std::forward<Send>(send));
             return;
         }
 
@@ -91,7 +94,7 @@ namespace http_handler {
 
         std::ifstream file(file_path, std::ios::binary);
         if (!file) {
-            SendNotFound(std::forward<Send>(send));
+            SendNotFoundPlainText(std::forward<Send>(send));
             return;
         }
 
@@ -181,11 +184,24 @@ namespace http_handler {
     template <typename Send>
     void RequestHandler::SendErrorJsonResponse(http::status status, const std::string& code, const std::string& message, Send&& send) {
         json::object errorJson = {
-            {"code", code},
-            {"message", message}
+        {"code", code},
+        {"message", message}
         };
 
-        SendJsonResponse(status, errorJson, std::forward<Send>(send));
+        http::response<http::string_body> res{ status, 11 };
+        res.set(http::field::content_type, "application/json");
+        res.body() = json::serialize(errorJson);
+        res.prepare_payload();
+        send(std::move(res));
+    }
+
+    template <typename Send>
+    void RequestHandler::SendNotFoundPlainText(Send&& send) {
+        http::response<http::string_body> res{ http::status::not_found, 11 };
+        res.set(http::field::content_type, "text/plain");
+        res.body() = "File not found";
+        res.prepare_payload();
+        send(std::move(res));
     }
 
 }  // namespace http_handler
