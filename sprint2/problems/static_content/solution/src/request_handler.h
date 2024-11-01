@@ -60,8 +60,10 @@ namespace http_handler {
 
     template <typename Body, typename Allocator, typename Send>
     void RequestHandler::operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
+        std::string decodedTarget = utils::UrlDecode(std::string(req.target()));
+
         if (req.method() == http::verb::get || req.method() == http::verb::head) {
-            if (req.target().starts_with("/api/")) {
+            if (decodedTarget.starts_with("/api/")) {
                 HandleApiRequest(std::forward<decltype(req)>(req), std::forward<Send>(send));
             }
             else {
@@ -82,13 +84,14 @@ namespace http_handler {
             file_path /= "index.html";
         }
 
-        if (!std::filesystem::exists(file_path) || !std::filesystem::is_regular_file(file_path)) {
-            SendNotFoundPlainText(std::forward<Send>(send));
+        // Проверка, что файл находится в корневом каталоге
+        if (!file_path.string().starts_with(static_root_.string())) {
+            SendBadRequest(std::forward<Send>(send));
             return;
         }
 
-        if (!file_path.string().starts_with(static_root_.string())) {
-            SendBadRequest(std::forward<Send>(send));
+        if (!std::filesystem::exists(file_path) || !std::filesystem::is_regular_file(file_path)) {
+            SendNotFoundPlainText(std::forward<Send>(send));
             return;
         }
 
@@ -115,11 +118,13 @@ namespace http_handler {
 
     template <typename Send>
     void RequestHandler::HandleApiRequest(http::request<http::string_body>&& req, Send&& send) {
-        if (req.target() == "/api/v1/maps") {
+        std::string decodedTarget = utils::UrlDecode(std::string(req.target()));
+
+        if (decodedTarget == "/api/v1/maps") {
             HandleGetMaps(std::forward<Send>(send));
         }
-        else if (req.target().starts_with("/api/v1/maps/")) {
-            HandleGetMapById(req.target().substr(12), std::forward<Send>(send));
+        else if (decodedTarget.starts_with("/api/v1/maps/")) {
+            HandleGetMapById(decodedTarget.substr(12), std::forward<Send>(send));
         }
         else {
             SendBadRequest(std::forward<Send>(send));
@@ -144,7 +149,8 @@ namespace http_handler {
         std::cout << "Handling request for map: " << mapId << std::endl;
 
         // Удаляем лишние символы, такие как '/'
-        std::string cleanedMapId(mapId);
+        std::string decodedMapId = utils::UrlDecode(std::string(mapId));
+        std::string cleanedMapId(decodedMapId);
         cleanedMapId.erase(std::remove(cleanedMapId.begin(), cleanedMapId.end(), '/'), cleanedMapId.end());
 
         model::Map::Id id{ cleanedMapId };

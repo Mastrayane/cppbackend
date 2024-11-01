@@ -31,5 +31,4 @@ namespace http_handler {
         return serializedMap;
     }
 
-
 }  // namespace http_handler
