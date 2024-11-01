@@ -1,13 +1,12 @@
-#pragma once
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include <boost/json.hpp>
 #include <string_view>
 
 #include "http_server.h"
 #include "model.h"
 #include "utils.h"
-
 
 namespace http_handler {
     namespace beast = boost::beast;
@@ -71,7 +70,6 @@ namespace http_handler {
         }
     }
 
-
     template <typename Send>
     void RequestHandler::HandleStaticRequest(http::request<http::string_body>&& req, Send&& send) {
         std::string decoded_target = utils::UrlDecode(std::string(req.target()));
@@ -82,33 +80,18 @@ namespace http_handler {
         }
 
         if (!std::filesystem::exists(file_path) || !std::filesystem::is_regular_file(file_path)) {
-            http::response<http::string_body> res{ http::status::not_found, req.version() };
-            res.set(http::field::content_type, "text/plain");
-            res.body() = "File not found";
-            res.content_length(res.body().size());
-            res.prepare_payload();
-            send(std::move(res));
+            SendNotFound(std::forward<Send>(send));
             return;
         }
 
         if (!file_path.string().starts_with(static_root_.string())) {
-            http::response<http::string_body> res{ http::status::bad_request, req.version() };
-            res.set(http::field::content_type, "text/plain");
-            res.body() = "Bad request";
-            res.content_length(res.body().size());
-            res.prepare_payload();
-            send(std::move(res));
+            SendBadRequest(std::forward<Send>(send));
             return;
         }
 
         std::ifstream file(file_path, std::ios::binary);
         if (!file) {
-            http::response<http::string_body> res{ http::status::not_found, req.version() };
-            res.set(http::field::content_type, "text/plain");
-            res.body() = "File not found";
-            res.content_length(res.body().size());
-            res.prepare_payload();
-            send(std::move(res));
+            SendNotFound(std::forward<Send>(send));
             return;
         }
 

@@ -16,9 +16,11 @@ std::string UrlDecode(const std::string& url) {
                 decoded << static_cast<char>(hex_value);
                 i += 2;
             }
-        } else if (url[i] == '+') {
+        }
+        else if (url[i] == '+') {
             decoded << ' ';
-        } else {
+        }
+        else {
             decoded << url[i];
         }
     }
@@ -27,15 +29,15 @@ std::string UrlDecode(const std::string& url) {
 
 std::string GetMimeType(const std::string& extension) {
     static const std::unordered_map<std::string, std::string> mimeTypes = {
-        {".htm", "text/html"}, {".html", "text/html"},
-        {".css", "text/css"}, {".txt", "text/plain"},
-        {".js", "text/javascript"}, {".json", "application/json"},
-        {".xml", "application/xml"}, {".png", "image/png"},
-        {".jpg", "image/jpeg"}, {".jpeg", "image/jpeg"}, {".jpe", "image/jpeg"},
-        {".gif", "image/gif"}, {".bmp", "image/bmp"},
-        {".ico", "image/vnd.microsoft.icon"}, {".tiff", "image/tiff"},
-        {".tif", "image/tiff"}, {".svg", "image/svg+xml"},
-        {".svgz", "image/svg+xml"}, {".mp3", "audio/mpeg"}
+         {".htm", "text/html"}, {".html", "text/html"},
+         {".css", "text/css"}, {".txt", "text/plain"},
+         {".js", "text/javascript"}, {".json", "application/json"},
+         {".xml", "application/xml"}, {".png", "image/png"},
+         {".jpg", "image/jpeg"}, {".jpeg", "image/jpeg"}, {".jpe", "image/jpeg"},
+         {".gif", "image/gif"}, {".bmp", "image/bmp"},
+         {".ico", "image/vnd.microsoft.icon"}, {".tiff", "image/tiff"},
+         {".tif", "image/tiff"}, {".svg", "image/svg+xml"},
+         {".svgz", "image/svg+xml"}, {".mp3", "audio/mpeg"}
     };
 
     auto it = mimeTypes.find(extension);
