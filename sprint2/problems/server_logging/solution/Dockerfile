@@ -1,49 +1,36 @@
-# escape=`
+# Не просто создаём образ, но даём ему имя build
+FROM gcc:11.3 as build
 
-# Создаём образ для сборки на Windows
-FROM mcr.microsoft.com/windows/servercore:ltsc2019 as build_windows
+RUN apt update && \
+    apt install -y \
+      python3-pip \
+      cmake \
+    && \
+    pip3 install conan==1.*
 
-# Устанавливаем необходимые зависимости
-RUN powershell -Command `
-    Invoke-WebRequest -Uri https://bootstrap.pypa.io/get-pip.py -OutFile get-pip.py; `
-    python get-pip.py; `
-    pip install conan==1.*; `
-    Remove-Item get-pip.py
-
-# Копируем файлы проекта в контейнер
+# Запуск conan как раньше
 COPY conanfile.txt /app/
+RUN mkdir /app/build && cd /app/build && \
+    conan install .. --build=missing
+
+# Папка data больше не нужна
 COPY ./src /app/src
 COPY CMakeLists.txt /app/
 
-# Создаем директорию для сборки
-RUN mkdir /app/build
+RUN cd /app/build && \
+    cmake -DCMAKE_BUILD_TYPE=Release .. && \
+    cmake --build .
 
-# Переходим в директорию сборки
-WORKDIR /app/build
-
-# Устанавливаем зависимости для каждой конфигурации на Windows
-RUN conan install .. --build=missing -s build_type=Debug -s compiler.runtime=MD
-RUN conan install .. --build=missing -s build_type=Release -s compiler.runtime=MT
-RUN conan install .. --build=missing -s build_type=RelWithDebInfo -s compiler.runtime=MT
-RUN conan install .. --build=missing -s build_type=MinSizeRel -s compiler.runtime=MT
-
-# Выполняем сборку для каждой конфигурации
-RUN cmake -DCMAKE_BUILD_TYPE=Debug .. && cmake --build .
-RUN cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build .
-RUN cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .. && cmake --build .
-RUN cmake -DCMAKE_BUILD_TYPE=MinSizeRel .. && cmake --build .
-
-# Второй контейнер для запуска
-FROM mcr.microsoft.com/windows/servercore:ltsc2019 as run
+# Второй контейнер в том же докерфайле
+FROM ubuntu:22.04 as run
 
 # Создадим пользователя www
-RUN net user /add www
-RUN net localgroup administrators www /add
+RUN groupadd -r www && useradd -r -g www www
 USER www
 
 # Скопируем приложение со сборочного контейнера в директорию /app.
 # Не забываем также папку data, она пригодится.
-COPY --from=build_windows /app/build/bin/game_server /app/
+COPY --from=build /app/build/bin/game_server /app/
 COPY ./data /app/data
 
 # Запускаем игровой сервер
