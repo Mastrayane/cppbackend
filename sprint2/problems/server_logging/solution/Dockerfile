@@ -1,6 +1,7 @@
-# Не просто создаём образ, но даём ему имя build
+# Создаём образ для сборки
 FROM gcc:11.3 as build
 
+# Устанавливаем необходимые зависимости
 RUN apt update && \
     apt install -y \
       python3-pip \
@@ -8,20 +9,30 @@ RUN apt update && \
     && \
     pip3 install conan==1.*
 
-# Запуск conan как раньше
+# Копируем файлы проекта в контейнер
 COPY conanfile.txt /app/
-RUN mkdir /app/build && cd /app/build && \
-    conan install .. --build=missing
-
-# Папка data больше не нужна
 COPY ./src /app/src
 COPY CMakeLists.txt /app/
 
-RUN cd /app/build && \
-    cmake -DCMAKE_BUILD_TYPE=Release .. && \
-    cmake --build .
+# Создаем директорию для сборки
+RUN mkdir /app/build
 
-# Второй контейнер в том же докерфайле
+# Переходим в директорию сборки
+WORKDIR /app/build
+
+# Устанавливаем зависимости для каждой конфигурации
+RUN conan install .. --build=missing -s build_type=Debug
+RUN conan install .. --build=missing -s build_type=Release
+RUN conan install .. --build=missing -s build_type=RelWithDebInfo
+RUN conan install .. --build=missing -s build_type=MinSizeRel
+
+# Выполняем сборку для каждой конфигурации
+RUN cmake -DCMAKE_BUILD_TYPE=Debug .. && cmake --build .
+RUN cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build .
+RUN cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .. && cmake --build .
+RUN cmake -DCMAKE_BUILD_TYPE=MinSizeRel .. && cmake --build .
+
+# Второй контейнер для запуска
 FROM ubuntu:22.04 as run
 
 # Создадим пользователя www

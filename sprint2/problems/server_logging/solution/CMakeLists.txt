@@ -6,16 +6,11 @@ set(CMAKE_CXX_STANDARD 20)
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+include(${CMAKE_BINARY_DIR}/conanbuildinfo_multi.cmake)
 conan_basic_setup(TARGETS)
 
-find_package(Boost 1.78.0 REQUIRED)
-if(Boost_FOUND)
-  include_directories(${Boost_INCLUDE_DIRS})
-endif()
-
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
+get_property(importTargets DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY IMPORTED_TARGETS)
+message(STATUS "${importTargets}")
 
 add_executable(game_server
     src/main.cpp
@@ -40,5 +35,5 @@ add_executable(game_server
     src/logging_request_handler.h
 )
 
-target_include_directories(game_server PRIVATE CONAN_PKG::boost)
+#target_include_directories(game_server PRIVATE CONAN_PKG::boost)
 target_link_libraries(game_server CONAN_PKG::boost)
