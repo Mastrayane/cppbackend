@@ -18,7 +18,7 @@ namespace http_server {
     namespace http = beast::http;
     namespace sys = boost::system;
 
-    inline void ReportError(beast::error_code ec, std::string_view what);
+    void ReportError(beast::error_code ec, std::string_view what);
 
     class SessionBase {
 

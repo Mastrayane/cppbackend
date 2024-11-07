@@ -4,7 +4,7 @@
 
 namespace http_server {
 
-    inline void ReportError(beast::error_code ec, std::string_view what) {
+    void ReportError(beast::error_code ec, std::string_view what) {
         std::cerr << what << ": "sv << ec.message() << std::endl;
     }
 
