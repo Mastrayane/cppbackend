@@ -13,6 +13,10 @@ COPY conanfile.txt /app/
 RUN mkdir /app/build && cd /app/build && \
     conan install .. --build=missing
 
+# Устанавливаем переменные окружения для Boost
+ENV BOOST_ROOT=/root/.conan/data/boost/1.78.0/_/_/package/9bb382e9c85821936d59f1c4ea5134768df38de2
+ENV BOOST_INCLUDEDIR=$BOOST_ROOT/include
+
 # Папка data больше не нужна
 COPY ./src /app/src
 COPY CMakeLists.txt /app/

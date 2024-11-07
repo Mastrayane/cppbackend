@@ -1,4 +1,3 @@
-#cmake_minimum_required(VERSION 3.30)
 cmake_minimum_required(VERSION 3.18)
 
 project(game_server CXX)
@@ -11,9 +10,6 @@ get_property(importTargets DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY IMPORTED_TAR
 message(STATUS "${importTargets}") 
 
 find_package(Boost 1.78.0 REQUIRED)
-if(Boost_FOUND)
-  include_directories(${Boost_INCLUDE_DIRS})
-endif()
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
