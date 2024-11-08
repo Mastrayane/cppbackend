@@ -5,14 +5,10 @@
 #include <iostream>
 #include <thread>
 
-#include <boost/log/trivial.hpp>     // для BOOST_LOG_TRIVIAL
-#include <boost/log/core.hpp>        // для logging::core
-#include <boost/log/expressions.hpp> // для выражения, задающего фильтр
-
 #include "json_loader.h"
 #include "request_handler.h"
 #include "logging_request_handler.h"
-#include "logger.h"
+//#include "logger.h"
 
 using namespace std::literals;
 namespace net = boost::asio;

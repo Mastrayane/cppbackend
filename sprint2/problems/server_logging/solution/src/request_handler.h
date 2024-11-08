@@ -6,12 +6,6 @@
 #include <boost/json.hpp>
 #include <string_view>
 
-//#include <boost/log/trivial.hpp>     // для BOOST_LOG_TRIVIAL
-//#include <boost/log/core.hpp>        // для logging::core
-//#include <boost/log/expressions.hpp> // для выражения, задающего фильтр
-
-
-
 #include "http_server.h"
 #include "model.h"
 #include "utils.h"

@@ -3,6 +3,8 @@
 void init_logging() {
     logging::add_common_attributes();
 
+    auto core = logging::core::get();
+
     auto console_sink = logging::add_console_log(std::cout, keywords::format = expr::stream
         << expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%dT%H:%M:%S.%f")
         << " " << expr::attr<std::string>("Message")
