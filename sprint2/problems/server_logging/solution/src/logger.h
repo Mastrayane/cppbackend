@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sdk.h>
+
 #include <boost/log/trivial.hpp>     // для BOOST_LOG_TRIVIAL
 #include <boost/log/core.hpp>        // для logging::core
 #include <boost/log/expressions.hpp> // для выражения, задающего фильтр

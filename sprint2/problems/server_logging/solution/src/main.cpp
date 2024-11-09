@@ -8,12 +8,13 @@
 #include "json_loader.h"
 #include "request_handler.h"
 #include "logging_request_handler.h"
-//#include "logger.h"
+#include "logger.h"
+
 
 using namespace std::literals;
 namespace net = boost::asio;
 namespace sys = boost::system;
-namespace logging = boost::log;
+//namespace logging = boost::log;
 namespace json = boost::json;
 
 namespace {

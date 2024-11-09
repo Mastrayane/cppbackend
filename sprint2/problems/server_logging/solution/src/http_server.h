@@ -9,6 +9,8 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 
+#include "logger.h"
+
 namespace http_server {
 
     using namespace std::literals;

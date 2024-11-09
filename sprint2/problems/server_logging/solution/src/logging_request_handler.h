@@ -1,10 +1,10 @@
 #pragma once
 //#include "request_handler.h"
-//#include "logger.h"
+#include "logger.h"
 #include <boost/json.hpp>
 #include <chrono>
 
-namespace logging = boost::log;
+//namespace logging = boost::log;
 
 namespace http_handler {
 

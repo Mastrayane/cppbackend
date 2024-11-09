@@ -1,6 +1,6 @@
 #include "logger.h"
 
-void init_logging() {
+ void init_logging() {
     logging::add_common_attributes();
 
     auto core = logging::core::get();
@@ -19,3 +19,4 @@ void init_logging() {
         strm << json::serialize(log_entry);
         });
 }
+
