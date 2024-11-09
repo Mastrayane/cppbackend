@@ -1,242 +1,329 @@
 #pragma once
 
-#include <filesystem>
-#include <fstream>
-#include <sstream>
-#include <boost/json.hpp>
-#include <string_view>
+#define BOOST_BEAST_USE_STD_STRING_VIEW
 
+#include <chrono>
+#include <filesystem>
+#include <iostream>
 #include "http_server.h"
 #include "model.h"
-#include "utils.h"
-#include "logger.h"
 
-
+//#include "logger.h"
 
 namespace http_handler {
-    namespace beast = boost::beast;
-    namespace http = beast::http;
-    namespace json = boost::json;
-    namespace logging = boost::log;
+namespace beast = boost::beast;
+namespace http = beast::http;
+namespace fs = std::filesystem;
+namespace logging = boost::log;
 
-    class RequestHandler {
-    public:
-        explicit RequestHandler(model::Game& game, const std::filesystem::path& static_root)
-            : game_{ game }, static_root_{ static_root } {}
+using namespace std::literals;
 
-        RequestHandler(const RequestHandler&) = delete;
-        RequestHandler& operator=(const RequestHandler&) = delete;
 
-        template <typename Body, typename Allocator, typename Send>
-        void operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send);
+enum class RequestType {
+    API,
+    STATIC_FILE
+};
 
-    private:
-        template <typename Send>
-        void HandleStaticRequest(http::request<http::string_body>&& req, Send&& send);
+struct RequestData {
+    RequestType req_type;
+    std::string req_data;
+};
 
-        template <typename Send>
-        void HandleApiRequest(http::request<http::string_body>&& req, Send&& send);
+boost::json::value PrepareOfficesForResponce(const model::Map& map);
+boost::json::value PrepareBuildingsForResponce(const model::Map& map);
+boost::json::value PrepareRoadsForResponse(const model::Map& map);
+RequestData RequestParser(const std::string& req_target);
 
-        template <typename Send>
-        void HandleGetMaps(Send&& send);
+template<typename RequestHandler>
+class LoggingRequestHandler {
 
-        template <typename Send>
-        void HandleGetMapById(std::string_view mapId, Send&& send);
+using ResponseVariant = std::variant<http::response<http::string_body>, http::response<http::file_body>>;
 
-        template <typename Send>
-        void SendBadRequest(Send&& send);
+public:
 
-        template <typename Send>
-        void SendNotFound(Send&& send);
-
-        template <typename Send>
-        void SendNotFoundPlainText(Send&& send);
-
-        template <typename Send>
-        void SendJsonResponse(http::status status, const json::value& jsonValue, Send&& send);
-
-        template <typename Send>
-        void SendErrorJsonResponse(http::status status, const std::string& code, const std::string& message, Send&& send);
-
-        json::object SerializeMap(const model::Map& map);
-
-        model::Game& game_;
-        std::filesystem::path static_root_;
-    };
+    LoggingRequestHandler(RequestHandler& decorated) :
+        decorated_(decorated) {
+        }
 
     template <typename Body, typename Allocator, typename Send>
-    void RequestHandler::operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
-        std::string decodedTarget = utils::UrlDecode(std::string(req.target()));
+    void operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send, const std::string& root_dir, const std::string& address_string) {
+        std::chrono::system_clock::time_point start_time = std::chrono::system_clock::now();
+        LogRequest(req, address_string);
+        ResponseVariant response = PrepareResponse(std::move(req), root_dir);
+        std::chrono::system_clock::time_point end_time = std::chrono::system_clock::now();
+        auto response_time = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+        LogResponse(response, address_string, response_time);
+        send(response);
 
-        if (req.method() == http::verb::get || req.method() == http::verb::head) {
-            if (decodedTarget.starts_with("/api/")) {             
-                HandleApiRequest(std::forward<decltype(req)>(req), std::forward<Send>(send));
-            }
-            else {          
-                HandleStaticRequest(std::forward<decltype(req)>(req), std::forward<Send>(send));
-            }
-        }
-        else {           
-            SendBadRequest(std::forward<Send>(send));
-        }
+
     }
 
-    template <typename Send>
-    void RequestHandler::HandleStaticRequest(http::request<http::string_body>&& req, Send&& send) {
-        std::string decoded_target = utils::UrlDecode(std::string(req.target()));
+private:
+    RequestHandler& decorated_;
 
-        std::filesystem::path file_path = static_root_ / decoded_target.substr(1); // Убираем первый символ '/'
-        file_path = file_path.make_preferred(); // Нормализуем путь
+    template <typename Body, typename Allocator>
+    void LogRequest(const http::request<Body, http::basic_fields<Allocator>>& req, const std::string& address_string) {
+        // Здесь вы можете добавить логирование запроса
+        //std::cout << "Received request: " << req.target() << std::endl;
+        boost::json::object add_data;
+        add_data["ip"] = address_string;
+        add_data["URI"] = std::string(req.target());
+        //beast::string_view method_sv = http::to_string(req.method());
+        std::string method_str(req.method_string());
+        add_data["method"] = method_str;
+        BOOST_LOG_TRIVIAL(info) << logging::add_value(additional_data, add_data) << "request received";
+    }
 
-        if (std::filesystem::is_directory(file_path)) {
-            file_path /= "index.html";
+    template <typename Body, typename Fields>
+    void LogResponse(const http::response<Body, Fields>& resp, const std::string& address_string, long long resp_time) {
+        // Здесь вы можете добавить логирование ответа
+        //std::cout << "Sending response with status code: " << resp.result_int() << std::endl;
+        boost::json::object add_data;
+        add_data["ip"] = address_string;
+        add_data["response_time"] = resp_time;
+        add_data["code"] = resp.result_int();
+        auto content_type = resp.find(http::field::content_type);
+        if (content_type != resp.end()) {
+            add_data["content_type"] = std::string(content_type->value());
+        } else {
+            add_data["content_type"] = "null";
         }
+        BOOST_LOG_TRIVIAL(info) << logging::add_value(additional_data, add_data) << "response sent";
+    }
 
-        // Проверка, что файл находится в корневом каталоге
-        if (!file_path.string().starts_with(static_root_.string())) {
-            SendBadRequest(std::forward<Send>(send));
-            return;
+    void LogResponse(const ResponseVariant& response, const std::string& address_string, long long resp_time) {
+        std::visit([this, address_string, resp_time](const auto& resp) {
+            LogResponse(resp, address_string, resp_time);
+        }, response);
+    }
+
+    template <typename Body, typename Allocator>
+    ResponseVariant PrepareResponse(http::request<Body, http::basic_fields<Allocator>>&& req, const std::string& root_dir) {
+        return decorated_(std::move(req), root_dir);
+    }
+};
+
+class RequestHandler {
+
+    using ResponseVariant = std::variant<http::response<http::string_body>, http::response<http::file_body>>;
+    using SendFunction = std::function<void(ResponseVariant)>;
+
+public:
+    explicit RequestHandler(model::Game& game)
+        : game_{game} {
+    }
+
+    RequestHandler(const RequestHandler&) = delete;
+    RequestHandler& operator=(const RequestHandler&) = delete;
+
+    struct ContentType {
+        ContentType() = delete;
+        constexpr static std::string_view TEXT_HTML = "text/html"sv;
+        constexpr static std::string_view JSON = "application/json"sv;
+        constexpr static std::string_view CSS = "text/css"sv;
+        constexpr static std::string_view PLAIN = "text/plain"sv;
+        constexpr static std::string_view JAVASCRIPT = "text/javascript"sv;
+        constexpr static std::string_view XML = "application/xml"sv;
+        constexpr static std::string_view PNG = "image/png"sv;
+        constexpr static std::string_view JPG = "image/jpeg"sv;
+        constexpr static std::string_view GIF = "image/gif"sv;
+        constexpr static std::string_view BMP = "image/bmp"sv;
+        constexpr static std::string_view ICO = "image/vnd.microsoft.icon"sv;
+        constexpr static std::string_view TIFF = "image/tiff"sv;
+        constexpr static std::string_view SVG = "image/svg+xml"sv;
+        constexpr static std::string_view MP3 = "audio/mpeg"sv;
+        constexpr static std::string_view UNKNOWN = "application/octet-stream"sv;
+    };
+
+    bool IsSubPath(fs::path base, fs::path path) {
+        path = fs::weakly_canonical(path);
+        base = fs::weakly_canonical(base);
+
+        for (auto b = base.begin(), p = path.begin(); b != base.end(); ++b, ++p) {
+            if (p == path.end() || *p != *b) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    std::string_view ExtensionToContentType(fs::path filepath) {
+        std::string extension = filepath.extension().string();
+        if (extension == ".htm" || extension == ".html")
+                return ContentType::TEXT_HTML;
+            else if (extension == ".json")
+                return ContentType::JSON;
+            else if (extension == ".css")
+                return ContentType::CSS;
+            else if (extension == ".txt")
+                return ContentType::PLAIN;
+            else if (extension == ".js")
+                return ContentType::JAVASCRIPT;
+            else if (extension == ".xml")
+                return ContentType::XML;
+            else if (extension == ".png")
+                return ContentType::PNG;
+            else if (extension == ".jpg" || extension == ".jpeg" || extension == ".jpe")
+                return ContentType::JPG;
+            else if (extension == ".gif")
+                return ContentType::GIF;
+            else if (extension == ".bmp")
+                return ContentType::BMP;
+            else if (extension == ".ico")
+                return ContentType::ICO;
+            else if (extension == ".tiff" || extension == ".tif")
+                return ContentType::TIFF;
+            else if (extension == ".svg" || extension == ".svgz")
+                return ContentType::SVG;
+            else if (extension == ".mp3")
+                return ContentType::MP3;
+            else
+                return ContentType::UNKNOWN;
+    }
+
+    template <typename Body, typename Allocator/*, typename Send*/>
+    /*void*/ResponseVariant operator()(http::request<Body, http::basic_fields<Allocator>>&& req/*, Send&& send*/, const std::string& root_dir) {
+        // Обработать запрос request и отправить ответ, используя send
+        auto data = req.body();
+        RequestData req_;
+        std::string req_target = std::string(req.target());
+        ResponseVariant response_v;
+        if ((req.method() == http::verb::get) || (req.method() == http::verb::head)) {
+            try {
+                req_ = RequestParser(req_target);
+                if (req_.req_type == RequestType::API) {
+                    response_v = HandleAPIRequest(/*std::forward<Send>(send),*/ req, req_);
+                }
+                if (req_.req_type == RequestType::STATIC_FILE) {
+                    response_v = HandleStaticFileRequest(/*std::forward<Send>(send),*/ req, req_, root_dir);
+                }
+            } catch (std::logic_error& ex) {
+                http::response<http::string_body> resp(http::status::bad_request, req.version());
+                resp.set(http::field::content_type, ContentType::JSON);
+                PrepareResponseBadRequestInvalidMethod(resp);
+                resp.keep_alive(req.keep_alive());
+                resp.prepare_payload();
+                //send(std::move(resp));
+                return resp;
+            }
+        } else {
+            http::response<http::string_body> resp(http::status::method_not_allowed, req.version());
+            resp.set(http::field::content_type, ContentType::JSON);
+            PrepareResponseBadRequestInvalidMethod(resp);
+            resp.keep_alive(req.keep_alive());
+            resp.prepare_payload();
+            //send(std::move(resp));
+            return resp;
+        }
+        return response_v;
+    }
+
+private:
+    model::Game& game_;
+
+    boost::json::value PrepareAPIResponce(const std::string& req_,const model::Game& game_);
+
+    void ReadStaticFile(const std::string& filepath, http::response<http::file_body>& response) {
+        beast::error_code ec;
+        http::file_body::value_type file;
+        file.open(filepath.c_str(), beast::file_mode::read, ec);
+
+        if (ec) {
+            throw std::logic_error("Failed to open file: " + filepath);
         }
         
-        if (!std::filesystem::exists(file_path) || !std::filesystem::is_regular_file(file_path)) {            
-            SendNotFoundPlainText(std::forward<Send>(send));
-            return;
-        }
-     
-        std::ifstream file(file_path, std::ios::binary);
-        if (!file) {          
-            SendNotFoundPlainText(std::forward<Send>(send));
-            return;
-        }
+        //std::cout << "ExtensionToContentType: " << ExtensionToContentType(filepath) << std::endl;
+        response.body() = std::move(file);
+        response.set(http::field::content_type, ExtensionToContentType(filepath));
+        response.content_length(response.body().size());
+        response.keep_alive(true);
+    }
 
-        std::stringstream file_content;
-        file_content << file.rdbuf();
-
+    void PrepareResponseBadRequestInvalidMethod(http::response<http::string_body>& response) {
+        if (response.result() == http::status::bad_request) {
+            if (response.find(http::field::content_type)->value() == ContentType::JSON) {
+                boost::json::value json_arr = {
+                    {"code" , "badRequest"},
+                    {"message" , "Bad Request"}
+                };
+                response.body() = boost::json::serialize(json_arr);
+            }
+            if (response.find(http::field::content_type)->value() == ContentType::PLAIN) {
+                response.body() = "Bad Request: Requested file is outside of the root directory";
+            }
+            response.content_length(response.body().size());
+        }
+        if (response.result() == http::status::method_not_allowed) {
+            response.body() = "Invalid method";
+            response.content_length(response.body().size());
+            response.set(http::field::allow, "GET, HEAD"sv);
+        }
         
-        std::string extension = file_path.extension().string();
-        std::string mime_type = utils::GetMimeType(extension);        
-
-        http::response<http::string_body> res{ http::status::ok, req.version() };
-        res.set(http::field::content_type, mime_type);
-        res.body() = file_content.str();
-        res.content_length(res.body().size());
-        res.prepare_payload();
-
-        send(std::move(res));
     }
+    //template <typename Send>
+    /*void*/ ResponseVariant HandleStaticFileRequest(/*Send&& send, */const http::request<http::basic_string_body<char>>& req, const RequestData& req_data, const std::string& root_dir) {
+        try {
+            std::string normalized_path = fs::weakly_canonical(fs::path(req_data.req_data)).string();
+            //std::cout << "normalized path: " << normalized_path << std::endl;
+            std::string filepath = root_dir + normalized_path;
+            //std:: cout << "filepath: " << filepath << std::endl;
+            if (fs::is_directory(filepath)) {
+                filepath = filepath + "index.html";
+                //std::cout << "Path to dir: " << filepath << std::endl;
+            }
+            if (!IsSubPath(fs::path(root_dir), filepath)) {
+                http::response<http::string_body> response(http::status::bad_request, req.version());
+                response.set(http::field::content_type, ContentType::PLAIN);
+                PrepareResponseBadRequestInvalidMethod(response);
+                response.keep_alive(req.keep_alive());
+                response.prepare_payload();
+                
+                return response;
+                //send(std::move(response));
+            } else {
+                http::response<http::file_body> response(http::status::ok, req.version());
+                ReadStaticFile(filepath, response);
+                
+                //send(std::move(response));
+                return response;
+            }
+        } catch (const std::exception& ex) {
+            http::response<http::string_body> response(
+            http::status::not_found, req.version());
+            response.set(http::field::content_type, ContentType::PLAIN);
+            response.keep_alive(req.keep_alive());
+            response.body() = "File not found: " + req_data.req_data;
+            response.content_length(response.body().size());
+            response.prepare_payload();
 
-    template <typename Send>
-    void RequestHandler::HandleApiRequest(http::request<http::string_body>&& req, Send&& send) {
-        std::string decodedTarget = utils::UrlDecode(std::string(req.target()));
-
-        if (decodedTarget == "/api/v1/maps") {
-            HandleGetMaps(std::forward<Send>(send));
-        }
-        else if (decodedTarget.starts_with("/api/v1/maps/")) {
-            HandleGetMapById(decodedTarget.substr(12), std::forward<Send>(send));
-        }
-        else {
-            SendBadRequest(std::forward<Send>(send));
-        }
-    }
-
-    template <typename Send>
-    void RequestHandler::HandleGetMaps(Send&& send) {
-        json::array mapsJson;
-        for (const auto& map : game_.GetMaps()) {
-            mapsJson.emplace_back(json::object{
-                {"id", *map.GetId()},
-                {"name", map.GetName()}
-                });
-        }
-
-        SendJsonResponse(http::status::ok, mapsJson, std::forward<Send>(send));
-    }
-
-    template <typename Send>
-    void RequestHandler::HandleGetMapById(std::string_view mapId, Send&& send) {
-        std::cout << "Handling request for map: " << mapId << std::endl;
-
-        // Удаляем лишние символы, такие как '/'
-        std::string decodedMapId = utils::UrlDecode(std::string(mapId));
-        std::string cleanedMapId(decodedMapId);
-        cleanedMapId.erase(std::remove(cleanedMapId.begin(), cleanedMapId.end(), '/'), cleanedMapId.end());
-
-        model::Map::Id id{ cleanedMapId };
-        std::cout << "Searching for map with id: " << *id << std::endl;
-
-        if (auto mapPtr = game_.FindMap(id); mapPtr) {
-            const auto& map = *mapPtr;
-            std::cout << "Found map: " << *map.GetId() << " - " << map.GetName() << std::endl;
-
-            SendJsonResponse(http::status::ok, SerializeMap(map), std::forward<Send>(send));
-        }
-        else {
-            std::cout << "Map not found: " << cleanedMapId << std::endl;
-            SendNotFound(std::forward<Send>(send));
+            //send(response);
+            return response;
         }
     }
 
-    template <typename Send>
-    void RequestHandler::SendBadRequest(Send&& send) {
-        json::object data;
-        data["code"] = static_cast<int>(http::status::bad_request);
-        data["text"] = "Bad request";
-        data["where"] = "request_handler";
-        BOOST_LOG_TRIVIAL(error) << logging::add_value(message, "error")       
-            << logging::add_value(additional_data, data);
-        SendErrorJsonResponse(http::status::bad_request, "badRequest", "Bad request", std::forward<Send>(send));
+    //template <typename Send>
+    /*void*/http::response<http::string_body> HandleAPIRequest(/*Send&& send, */const http::request<http::basic_string_body<char>>& req, const RequestData& req_data) {
+        http::response<http::string_body> response(http::status::ok, req.version());
+        boost::json::value response_body = PrepareAPIResponce(req_data.req_data, game_);
+        if (response_body.is_object()) {
+            if (response_body.as_object().find("code") != response_body.as_object().end() && 
+                response_body.as_object().at("code") == "mapNotFound") {
+                response.result(http::status::not_found);
+            }
+        }
+        response.body() = boost::json::serialize(response_body);
+        response.keep_alive(req.keep_alive());
+        response.set(http::field::content_type, ContentType::JSON);
+        response.content_length(response.body().size());
+        response.prepare_payload();
+        
+        //send(response);
+        return response;
+        
     }
 
-    template <typename Send>
-    void RequestHandler::SendNotFound(Send&& send) {
-        json::object data;
-        data["code"] = static_cast<int>(http::status::not_found);
-        data["text"] = "Map not found";
-        data["where"] = "request_handler";
-        BOOST_LOG_TRIVIAL(error) << logging::add_value(message, "error")
-            << logging::add_value(additional_data, data);
-
-        SendErrorJsonResponse(http::status::not_found, "mapNotFound", "Map not found", std::forward<Send>(send));
-    }
-
-    template <typename Send>
-    void RequestHandler::SendJsonResponse(http::status status, const json::value& jsonValue, Send&& send) {
-        http::response<http::string_body> res{ status, 11 };
-        res.set(http::field::content_type, "application/json");
-        res.body() = json::serialize(jsonValue);
-        res.prepare_payload();
-        send(std::move(res));
-    }
-
-    template <typename Send>
-    void RequestHandler::SendErrorJsonResponse(http::status status, const std::string& code, const std::string& message, Send&& send) {
-        json::object errorJson = {
-        {"code", code},
-        {"message", message}
-        };
-
-        http::response<http::string_body> res{ status, 11 };
-        res.set(http::field::content_type, "application/json");
-        res.body() = json::serialize(errorJson);
-        res.prepare_payload();
-        send(std::move(res));
-    }
-
-    template <typename Send>
-    void RequestHandler::SendNotFoundPlainText(Send&& send) {
-        json::object data;
-        data["code"] = static_cast<int>(http::status::not_found);
-        data["text"] = "File not found";
-        data["where"] = "request_handler";
-        BOOST_LOG_TRIVIAL(error) << logging::add_value(message, "error")
-            << logging::add_value(additional_data, data);
-
-        http::response<http::string_body> res{ http::status::not_found, 11 };
-        res.set(http::field::content_type, "text/plain");
-        res.body() = "File not found";
-        res.prepare_payload();
-        send(std::move(res));
-    }
+};
 
 }  // namespace http_handler
+
+

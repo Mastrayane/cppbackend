@@ -1,4 +1,3 @@
-# Не просто создаём образ, но даём ему имя build
 FROM gcc:11.3 as build
 
 RUN apt update && \
@@ -8,14 +7,12 @@ RUN apt update && \
     && \
     pip3 install conan==1.*
 
-# Запуск conan как раньше
+# копируем conanfile.txt в контейнер и запускаем conan install
 COPY conanfile.txt /app/
 RUN mkdir /app/build && cd /app/build && \
-    conan install .. --build=missing -s compiler.libcxx=libstdc++11 -s build_type=Release
+    conan install .. --build=missing -s build_type=Release -s compiler.libcxx=libstdc++11
 
-
-
-# Папка data больше не нужна
+# только после этого копируем остальные иходники
 COPY ./src /app/src
 COPY CMakeLists.txt /app/
 
@@ -34,6 +31,7 @@ USER www
 # Не забываем также папку data, она пригодится.
 COPY --from=build /app/build/bin/game_server /app/
 COPY ./data /app/data
+COPY ./static /app/static
 
 # Запускаем игровой сервер
-ENTRYPOINT ["/app/game_server", "/app/data/config.json"]
+ENTRYPOINT ["/app/game_server", "/app/data/config.json", "/app/static"] 
