@@ -1,6 +1,13 @@
 #pragma once
 
-#include <sdk.h>
+//#include <sdk.h>
+
+#ifdef WIN32
+#define _WIN32_WINNT 0x601
+#include <sdkddkver.h>
+#endif
+
+#define BOOST_BEAST_USE_STD_STRING_VIEW
 
 #include <boost/log/trivial.hpp>     // для BOOST_LOG_TRIVIAL
 #include <boost/log/core.hpp>        // для logging::core
