@@ -47,8 +47,8 @@ add_executable(game_server
 	src/game_server.h
 	src/response_maker.cpp
 	src/response_maker.h
-	src/aux.cpp	
-	src/aux.h
+	src/_aux.cpp	
+	src/_aux.h
 
 )
 target_include_directories(game_server PRIVATE CONAN_PKG::boost)
