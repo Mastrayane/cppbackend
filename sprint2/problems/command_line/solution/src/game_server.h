@@ -64,7 +64,7 @@ public:
         spawn_dog_random = true;
     }
 
-    bool IsAutoTicker() {
+    bool IsAutoTicker() const {
         return auto_ticker_;
     }
 
