@@ -1,7 +1,7 @@
 #pragma once
 
 #include "auxiliary.h"
-#include "types.h"
+#include "spatial_types.h"
 
 #include <algorithm>
 #include <cassert>

@@ -8,7 +8,7 @@
 #include <vector>
 #include <unordered_map>
 
-#include "types.h"
+#include "spatial_types.h"
 
 namespace model {
 
