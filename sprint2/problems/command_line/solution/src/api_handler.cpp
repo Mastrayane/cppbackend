@@ -2,7 +2,8 @@
 
 namespace http_handler {
 
-using namespace strconsts;
+using namespace spati_keys;
+
 boost::json::value PrepareRoadsForResponse(std::shared_ptr<model::Map> map) {
     boost::json::array roads;
     for (const auto& road : map->GetRoads()) {

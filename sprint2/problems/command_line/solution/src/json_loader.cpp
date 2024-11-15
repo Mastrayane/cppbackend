@@ -4,7 +4,7 @@ using namespace std::literals;
 
 namespace json_loader {
 
-using namespace strconsts;
+using namespace spati_keys;
 
 std::filesystem::path operator""_p(const char* data, std::size_t sz) {
     return std::filesystem::path(data, data + sz);

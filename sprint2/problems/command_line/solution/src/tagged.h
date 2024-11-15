@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace strconsts {
+namespace spati_keys {
 
     static const std::string x_start = "x0";
     static const std::string x_end = "x1";
