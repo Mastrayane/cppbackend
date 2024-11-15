@@ -60,9 +60,7 @@ std::string UrlDecode(const std::string& str) {
 }
 
 bool IsSubPath(fs::path base, fs::path path) {
-    fs::path combined_path = base / path;
     fs::path canonical_path = fs::weakly_canonical(path);
-
     return canonical_path.string().find(base.string()) == 0;
 }
 
