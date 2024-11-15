@@ -107,7 +107,9 @@ public:
 
     Map(Id id, std::string name) noexcept :
         id_(std::move(id)),
-        name_(std::move(name)) {}
+        name_(std::move(name)),
+        map_dog_speed_(0.0) {
+    }
 
     const Id& GetId() const noexcept;
     const std::string& GetName() const noexcept;
