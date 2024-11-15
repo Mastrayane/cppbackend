@@ -114,7 +114,7 @@ private:
 template <typename RequestHandler>
 class LoggingRequestHandler {
 public:
-    LoggingRequestHandler(RequestHandler& handler) :
+    explicit LoggingRequestHandler(RequestHandler& handler) :
         decorated_(handler) {}
     
     template <typename Body, typename Allocator, typename Send>
@@ -145,7 +145,7 @@ private:
     template <typename Body, typename Allocator>
     std::string LogRequest(http::request<Body, http::basic_fields<Allocator>>& req) {
         std::string host = static_cast<std::string>(req.at(http::field::host));
-        host = host.substr(0, host.rfind(':'));
+        host.erase(host.rfind(':'));
 
         boost::json::object obj{
             {"ip", host},
