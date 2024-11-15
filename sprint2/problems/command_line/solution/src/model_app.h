@@ -29,12 +29,12 @@ Token GetToken();
 class Dog {
 public:
     explicit Dog(Token pl_tok) :
-        dog_id_(++dog_id_counter_),
         token_(pl_tok),
+        dog_id_(++dog_id_counter_),
         dog_position_(0., 0.),
         dog_speed_(0., 0.),
         dir_("U") {
-        }
+    }
 
     ~Dog() {
     }
