@@ -127,9 +127,9 @@ Point Road::GetEnd() const noexcept {
     return end_;
 }
 
-bool Road::PointIsOnRoad(ParamPairDouble& p) {
-    return ((p.x_ >= road_area_.left_bottom.x_ && p.x_ <= road_area_.right_top.x_) && 
-            (p.y_ >= road_area_.left_bottom.y_ && p.y_ <= road_area_.right_top.y_));
+bool Road::PointIsOnRoad(ParamPairDouble& point) const {
+    return ((point.x_ >= road_area_.left_bottom.x_ && point.x_ <= road_area_.right_top.x_) &&
+        (point.y_ >= road_area_.left_bottom.y_ && point.y_ <= road_area_.right_top.y_));
 }
 
 RoadArea Road::GetRoadArea() const {

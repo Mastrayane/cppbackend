@@ -57,7 +57,7 @@ public:
     bool IsVertical() const noexcept;
     Point GetStart() const noexcept;
     Point GetEnd() const noexcept;
-    bool PointIsOnRoad(ParamPairDouble& p);
+    bool PointIsOnRoad(ParamPairDouble& point) const;
     RoadArea GetRoadArea() const;
 
 private:
