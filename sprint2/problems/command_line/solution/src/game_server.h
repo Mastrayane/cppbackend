@@ -51,10 +51,6 @@ public:
         game_.UpdateGame(delta.count()/1000.);
     }
 
-    void UpdateGames() {
-        game_.UpdateGame(tick_);
-    }
-
     void SetGameServerTick(const double tick) {
         tick_ = tick;
         std::cout << "game server tick is set to " << tick_;
