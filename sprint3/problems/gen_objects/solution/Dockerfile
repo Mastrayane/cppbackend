@@ -12,8 +12,9 @@ COPY conanfile.txt /app/
 RUN mkdir /app/build && cd /app/build && \
     conan install .. --build=missing -s build_type=Release -s compiler.libcxx=libstdc++11
 
-# только после этого копируем остальные иходники
+# только после этого копируем остальные иходники, включая тесты
 COPY ./src /app/src
+COPY ./tests /app/tests  # Копируем тесты
 COPY CMakeLists.txt /app/
 
 RUN cd /app/build && \
@@ -29,9 +30,9 @@ USER www
 
 # Скопируем приложение со сборочного контейнера в директорию /app.
 # Не забываем также папку data, она пригодится.
-COPY --from=build /app/build/bin/game_server /app/
+COPY --from=build /app/build/game_server /app/
 COPY ./data /app/data
 COPY ./static /app/static
 
 # Запускаем игровой сервер
-ENTRYPOINT ["/app/game_server", "/app/data/config.json", "/app/static"] 
+ENTRYPOINT ["/app/game_server", "/app/data/config.json", "/app/static"]
