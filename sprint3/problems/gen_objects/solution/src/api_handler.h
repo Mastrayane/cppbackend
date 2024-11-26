@@ -19,8 +19,8 @@ namespace http = beast::http;
 namespace http_handler {
 
 boost::json::value PrepareRoadsForResponse(std::shared_ptr<model::Map> map);
-boost::json::value PrepareBuildingsForResponce(std::shared_ptr<model::Map> map);
-boost::json::value PrepareOfficesForResponce(std::shared_ptr<model::Map> map);
+boost::json::value PrepareBuildingsForResponse(std::shared_ptr<model::Map> map);
+boost::json::value PrepareOfficesForResponse(std::shared_ptr<model::Map> map);
 
 class ApiHandler {
 public:
@@ -111,10 +111,10 @@ public:
                         boost::json::array roads = PrepareRoadsForResponse(map).as_array();
                         resp_message["roads"] = roads;
                     } else if(key == "buildings") {
-                        boost::json::array buildings = PrepareBuildingsForResponce(map).as_array();
+                        boost::json::array buildings = PrepareBuildingsForResponse(map).as_array();
                         resp_message["buildings"] = buildings;
                     } else if (key == "offices") {
-                        boost::json::array offices = PrepareOfficesForResponce(map).as_array();
+                        boost::json::array offices = PrepareOfficesForResponse(map).as_array();
                         resp_message["offices"] = offices;            
                     }
                 }
