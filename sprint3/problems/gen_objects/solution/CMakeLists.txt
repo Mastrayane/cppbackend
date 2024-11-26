@@ -54,10 +54,18 @@ add_executable(game_server
 	src/response_maker.h
 	src/auxiliary.cpp	
 	src/auxiliary.h
-	src/loot_generator.h
-    src/loot_generator.cpp
-	#tests/model-tests.cpp
-    tests/loot_generator_tests.cpp
 )
 target_include_directories(game_server PRIVATE CONAN_PKG::boost)
 target_link_libraries(game_server PRIVATE Threads::Threads CONAN_PKG::boost)
+
+add_executable(game_server_tests
+    src/model.h
+    src/model.cpp
+    src/loot_generator.h
+    src/loot_generator.cpp
+    #src/tagged.h
+    #tests/model-tests.cpp
+    tests/loot_generator_tests.cpp
+)
+target_include_directories(game_server_tests PRIVATE  CONAN_PKG::boost)
+target_link_libraries(game_server_tests PRIVATE CONAN_PKG::catch2 CONAN_PKG::boost Threads::Threads) 
