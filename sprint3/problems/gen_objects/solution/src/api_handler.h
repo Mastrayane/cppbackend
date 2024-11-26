@@ -72,66 +72,73 @@ public:
     http::response<http::string_body> HandleMapRequest(const http::request<Body, http::basic_fields<Allocator>>& req_, const RequestData& r_data_) {
         json::value message;
         if (req_.method() != http::verb::get) {
-            return MakeResponse(http::status::method_not_allowed, 
-                                Errors::GET_INVALID, req_.version(), req_.keep_alive(), 
-                                ContentType::JSON, 
-                                "no-cache"sv, "GET"sv);
+            return MakeResponse(http::status::method_not_allowed,
+                Errors::GET_INVALID, req_.version(), req_.keep_alive(),
+                ContentType::JSON,
+                "no-cache"sv, "GET, HEAD"sv);
         }
-        
+
         if (r_data_.r_target.empty()) {
-            return MakeResponse(http::status::bad_request, 
-                                Errors::BAD_REQ, 
-                                req_.version(), req_.keep_alive(), 
-                                ContentType::JSON, 
-                                "no-cache"sv);
+            return MakeResponse(http::status::bad_request,
+                Errors::BAD_REQ,
+                req_.version(), req_.keep_alive(),
+                ContentType::JSON,
+                "no-cache"sv);
         }
+
         if (r_data_.r_target == "maps") {
             json::array array;
             for (auto& map : gs_.GetMaps()) {
-                json::value val = {{"id",*map.GetId()}, {"name", map.GetName()}};
+                json::value val = { {"id",*map.GetId()}, {"name", map.GetName()} };
                 array.push_back(val);
             }
             message = array;
-            return MakeResponse(http::status::ok, 
-                                json::serialize(message), 
-                                req_.version(), req_.keep_alive(), 
-                                ContentType::JSON, "no-cache"sv); 
-        } else {
+            return MakeResponse(http::status::ok,
+                json::serialize(message),
+                req_.version(), req_.keep_alive(),
+                ContentType::JSON, "no-cache"sv);
+        }
+        else {
             json::object resp_message;
-            model::Map::Id id_{r_data_.r_target};
+            model::Map::Id id_{ r_data_.r_target };
             std::shared_ptr<model::Map> map = gs_.FindMap(id_);
             if (map != nullptr) {
                 std::vector<std::string> keys_in_map = map->GetKeys();
                 for (const auto& key : keys_in_map) {
                     if (key == "id") {
                         resp_message["id"] = *map->GetId();
-                    } else if (key == "name") {
+                    }
+                    else if (key == "name") {
                         resp_message["name"] = map->GetName();
-                    } else if (key == "roads") {
+                    }
+                    else if (key == "roads") {
                         boost::json::array roads = PrepareRoadsForResponse(map).as_array();
                         resp_message["roads"] = roads;
-                    } else if(key == "buildings") {
+                    }
+                    else if (key == "buildings") {
                         boost::json::array buildings = PrepareBuildingsForResponse(map).as_array();
                         resp_message["buildings"] = buildings;
-                    } else if (key == "offices") {
+                    }
+                    else if (key == "offices") {
                         boost::json::array offices = PrepareOfficesForResponse(map).as_array();
-                        resp_message["offices"] = offices;            
+                        resp_message["offices"] = offices;
                     }
                 }
                 message = resp_message;
-                return MakeResponse(http::status::ok, 
-                                    json::serialize(message), 
-                                    req_.version(), req_.keep_alive(), 
-                                    ContentType::JSON, 
-                                    "no-cache"sv);
-                
-            } else {
-                return MakeResponse(http::status::not_found, 
-                                    Errors::MAP_NOT_FOUND, 
-                                    req_.version(), req_.keep_alive(), 
-                                    ContentType::JSON, 
-                                    "no-cache"sv);
-                
+                return MakeResponse(http::status::ok,
+                    json::serialize(message),
+                    req_.version(), req_.keep_alive(),
+                    ContentType::JSON,
+                    "no-cache"sv);
+
+            }
+            else {
+                return MakeResponse(http::status::not_found,
+                    Errors::MAP_NOT_FOUND,
+                    req_.version(), req_.keep_alive(),
+                    ContentType::JSON,
+                    "no-cache"sv);
+
             }
         }
     }
