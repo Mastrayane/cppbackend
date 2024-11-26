@@ -3,6 +3,7 @@
 #include "auxiliary.h"
 #include "spatial_types.h"
 #include "loot_generator.h"
+#include "model_app.h"
 
 #include <algorithm>
 #include <cassert>
@@ -155,6 +156,7 @@ private:
     loot_gen::LootGenerator lootGenerator_;
     std::mt19937 randomGenerator_;
     int nextLootId_ = 0;
+    std::vector<Dog> dogs_;
 };
 
 

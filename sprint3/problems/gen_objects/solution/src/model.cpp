@@ -204,7 +204,7 @@ void Map::AddLootTypes(const std::vector<std::string>& lootTypes) {
 
 void Map::GenerateLoot(std::chrono::milliseconds time_delta) {
     unsigned lootCount = lostObjects_.size();
-    unsigned looterCount = dogs_.size(); // Предположим, что dogs_ — это список собак на карте
+    unsigned looterCount = dogs_.size(); // Используем список собак на карте
 
     unsigned newLootCount = lootGenerator_.Generate(time_delta, lootCount, looterCount);
 

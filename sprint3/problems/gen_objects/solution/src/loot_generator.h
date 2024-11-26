@@ -12,6 +12,8 @@ public:
     using RandomGenerator = std::function<double()>;
     using TimeInterval = std::chrono::milliseconds;
 
+    LootGenerator() = default;
+
     /*
      * base_interval - базовый отрезок времени > 0
      * probability - вероятность появления трофея в течение базового интервала времени

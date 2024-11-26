@@ -1,3 +1,4 @@
+#include <cmath> // Добавляем заголовочный файл для std::log
 #include <catch2/catch_test_macros.hpp>
 #include "../src/loot_generator.h"
 
