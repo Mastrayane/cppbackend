@@ -6,6 +6,9 @@
 #include <boost/beast.hpp>
 #include <optional>
 
+#include <string>
+#include <boost/beast/http/status.hpp>
+
 #include "auxiliary.h"
 #include "game_server.h"
 #include "response_maker.h"
@@ -17,6 +20,28 @@ namespace beast = boost::beast;
 namespace http = beast::http;
 
 namespace http_handler {
+
+    std::string toString(RequestType type) {
+        switch (type) {
+        case RequestType::API: return "API";
+        case RequestType::PLAYER: return "PLAYER";
+        case RequestType::FILE: return "FILE";
+        default: return "UNKNOWN";
+        }
+    }
+
+    std::string statusClassToString(boost::beast::http::status_class status_class) {
+        switch (status_class) {
+        case boost::beast::http::status_class::informational: return "Informational";
+        case boost::beast::http::status_class::successful: return "Successful";
+        case boost::beast::http::status_class::redirection: return "Redirection";
+        case boost::beast::http::status_class::client_error: return "Client Error";
+        case boost::beast::http::status_class::server_error: return "Server Error";
+        default: return "Unknown";
+        }
+    }
+
+
 
 boost::json::value PrepareRoadsForResponse(std::shared_ptr<model::Map> map);
 boost::json::value PrepareBuildingsForResponse(std::shared_ptr<model::Map> map);
