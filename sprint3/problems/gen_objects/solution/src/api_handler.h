@@ -13,6 +13,7 @@
 #include "game_server.h"
 #include "response_maker.h"
 #include "tagged.h"
+#include "request_handler.h"
 
 namespace json = boost::json;
 namespace net = boost::asio;
@@ -21,14 +22,6 @@ namespace http = beast::http;
 
 namespace http_handler {
 
-    std::string toString(RequestType type) {
-        switch (type) {
-        case RequestType::API: return "API";
-        case RequestType::PLAYER: return "PLAYER";
-        case RequestType::FILE: return "FILE";
-        default: return "UNKNOWN";
-        }
-    }
 
     std::string statusClassToString(boost::beast::http::status_class status_class) {
         switch (status_class) {
