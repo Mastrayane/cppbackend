@@ -15,16 +15,16 @@ namespace fs = std::filesystem;
 
 namespace {
 
-template <typename Fn>
-void RunWorkers(unsigned n, const Fn& fn) {
-    n = std::max(1u, n);
-    std::vector<std::jthread> workers;
-    workers.reserve(n-1);
-    while (--n) {
-        workers.emplace_back(fn);
+    template <typename Fn>
+    void RunWorkers(unsigned n, const Fn& fn) {
+        n = std::max(1u, n);
+        std::vector<std::jthread> workers;
+        workers.reserve(n - 1);
+        while (--n) {
+            workers.emplace_back(fn);
+        }
+        fn();
     }
-    fn();
-}
 
 } // namespace
 
@@ -34,10 +34,12 @@ int main(int argc, const char* argv[]) {
     try {
         if (auto args = ParseCommandLine(argc, argv)) {
             command_line_args = *args;
-        } else {
+        }
+        else {
             return EXIT_FAILURE;
         }
-    } catch (const std::exception& ex) {
+    }
+    catch (const std::exception& ex) {
         std::cout << "Failed parsing command line arguments" << std::endl;
         return EXIT_FAILURE;
     }
@@ -63,12 +65,12 @@ int main(int argc, const char* argv[]) {
 
         if (command_line_args.tick_period > 0) {
             std::chrono::milliseconds mills(command_line_args.tick_period);
-            auto ticker = std::make_shared<Ticker>(api_strand, mills, 
-                [&gs](std::chrono::milliseconds delta) {gs.Tick(delta);}
+            auto ticker = std::make_shared<Ticker>(api_strand, mills,
+                [&gs](std::chrono::milliseconds delta) {gs.Tick(delta); }
             );
             gs.SetAutoTicker();
             ticker->Start();
-            
+
         }
 
         const auto address = net::ip::make_address("0.0.0.0");
@@ -79,21 +81,22 @@ int main(int argc, const char* argv[]) {
             if (!ec) {
                 ioc.stop();
             }
-        });
+            });
 
         auto handler = std::make_shared<http_handler::RequestHandler>(ioc, gs, api_strand);
-        http_handler::LoggingRequestHandler<http_handler::RequestHandler> logging_handler{*handler};
+        http_handler::LoggingRequestHandler<http_handler::RequestHandler> logging_handler{ *handler };
         boost::json::object add_data;
         add_data["port"] = port;
         add_data["address"] = address.to_string();
         logger::LogMessageInfo(add_data, "server started"s);
-    // Запускаем обработку запросов 
-        http_server::ServeHttp(ioc, {address, port}, logging_handler);
+        // Запускаем обработку запросов 
+        http_server::ServeHttp(ioc, { address, port }, logging_handler);
 
         RunWorkers(std::max(1u, num_threads), [&ioc] {
             ioc.run();
-        });
-    } catch (const std::exception& ex) {
+            });
+    }
+    catch (const std::exception& ex) {
         logger::LogExit(EXIT_FAILURE, &ex);
         return EXIT_FAILURE;
     }

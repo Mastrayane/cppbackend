@@ -22,8 +22,8 @@ public:
     GameServer(net::io_context& ioc, fs::path config, fs::path root) :
         ioc_(ioc),
         root_dir_(root),
-        game_{json_loader::LoadGame(config)} {
-        }
+        game_{ json_loader::LoadGame(config) } {
+    }
 
     const fs::path& GetRootDir() const noexcept {
         return root_dir_;
@@ -48,7 +48,7 @@ public:
     }
 
     void Tick(std::chrono::milliseconds delta) {
-        game_.UpdateGame(delta.count()/1000.);
+        game_.UpdateGame(delta.count() / 1000.);
     }
 
     void SetGameServerTick(const double tick) {

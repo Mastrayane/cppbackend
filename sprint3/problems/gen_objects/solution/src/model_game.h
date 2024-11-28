@@ -5,6 +5,7 @@
 
 #include "model_app.h"
 #include "model.h"
+#include "loot_generator.h"
 
 namespace model {
 
@@ -61,7 +62,6 @@ namespace model {
         double default_dog_speed_ = 1.;
 
         loot_gen::LootGenerator lootGenerator_;
-
     };
 
 }
