@@ -51,6 +51,10 @@ public:
                 } else if (r_data_.r_target == "tick" && !gs_.IsAutoTicker()) {
                     return HandleTickRequest(req_);
                 } else {
+
+                    // Логирование ошибки
+                    std::cout << "Invalid request target: " << r_data_.r_target << std::endl;
+
                     return MakeResponse(http::status::bad_request, 
                                         Errors::BAD_REQ, 
                                         req_.version(), req_.keep_alive(), 
@@ -58,11 +62,19 @@ public:
                 }
             } 
         } catch (const std::exception& ex) {
+
+            // Логирование ошибки
+            std::cout << "Exception: " << ex.what() << std::endl;
+
             return MakeResponse(http::status::bad_request, 
                                 Errors::BAD_REQ, 
                                 req_.version(), req_.keep_alive(), 
                                 ContentType::JSON);
         }
+
+        // Логирование ошибки
+        std::cout << "Unknown request type: " << toString(r_data_.type) << std::endl;
+
         return MakeResponse(http::status::bad_request, 
                             Errors::BAD_REQ, 
                             req_.version(), req_.keep_alive(), 
@@ -72,8 +84,17 @@ public:
 // Methods, no authorization required ->
     template <typename Body, typename Allocator>
     http::response<http::string_body> HandleMapRequest(const http::request<Body, http::basic_fields<Allocator>>& req_, const RequestData& r_data_) {
+
+        // Логирование запроса
+        std::cout << "Request method: " << req_.method_string() << std::endl;
+        std::cout << "Request target: " << req_.target() << std::endl;
+
         json::value message;
         if (req_.method() != http::verb::get) {
+
+            // Логирование ошибки
+            std::cout << "Method not allowed: " << req_.method_string() << std::endl;
+
             return MakeResponse(http::status::method_not_allowed,
                 Errors::GET_INVALID, req_.version(), req_.keep_alive(),
                 ContentType::JSON,
@@ -81,6 +102,7 @@ public:
         }
 
         if (r_data_.r_target.empty()) {
+
             return MakeResponse(http::status::bad_request,
                 Errors::BAD_REQ,
                 req_.version(), req_.keep_alive(),
@@ -95,6 +117,10 @@ public:
                 array.push_back(val);
             }
             message = array;
+
+            // Логирование ответа
+            std::cout << "Response status: " << http::to_status_class(http::status::ok) << std::endl;
+
             return MakeResponse(http::status::ok,
                 json::serialize(message),
                 req_.version(), req_.keep_alive(),
@@ -131,6 +157,10 @@ public:
                     }
                 }
                 message = resp_message;
+
+                // Логирование ответа
+                std::cout << "Response status: " << http::to_status_class(http::status::ok) << std::endl;
+
                 return MakeResponse(http::status::ok,
                     json::serialize(message),
                     req_.version(), req_.keep_alive(),
@@ -151,7 +181,16 @@ public:
 
     template <typename Body, typename Allocator>
     http::response<http::string_body> HandlePlayerJoinRequest(const http::request<Body, http::basic_fields<Allocator>>& req_) {
+
+        // Логирование запроса
+        std::cout << "Request method: " << req_.method_string() << std::endl;
+        std::cout << "Request target: " << req_.target() << std::endl;
+
         if (req_.method() != http::verb::post) {
+
+            // Логирование ошибки
+            std::cout << "Method not allowed: " << req_.method_string() << std::endl;
+
             return MakeResponse(http::status::method_not_allowed, 
                                 Errors::POST_INVALID, 
                                 req_.version(), req_.keep_alive(), 
@@ -194,6 +233,10 @@ public:
                                 req_.version(), req_.keep_alive(), 
                                 ContentType::HTML);
         }
+
+        // Логирование ответа
+        std::cout << "Response status: " << http::to_status_class(http::status::ok) << std::endl;
+
         return MakeResponse(http::status::ok, 
                             boost::json::serialize(resp), 
                             req_.version(), req_.keep_alive(), 
