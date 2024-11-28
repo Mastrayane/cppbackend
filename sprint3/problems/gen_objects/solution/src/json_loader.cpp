@@ -84,30 +84,6 @@ void AddOfficesToMap(const boost::json::value& parsed, model::Map& map) {
     }
 }
 
-void AddMapsToGame (const boost::json::value& parsed, model::Game& game) {
-    for (auto& map : parsed.as_array()) {
-        model::Map::Id id{map.as_object().at("id").as_string().c_str()};
-        model::Map map_i = model::Map{id, map.as_object().at("name").as_string().c_str()};
-        map_i.SetMapDogSpeed(game.GetDefaultDogSpeed());
-        for (const auto& pair : map.as_object()) {
-            map_i.SetKeySequence(pair.key_c_str());
-            if (pair.key() == "roads") {
-                AddRoadsToMap(map.as_object().at("roads").as_array(), map_i);
-            }
-            if (pair.key() == "buildings") {
-                AddBuildingsToMap(map.as_object().at("buildings").as_array(), map_i);
-            }
-            if (pair.key() == "offices") {
-                AddOfficesToMap(map.as_object().at("offices").as_array(), map_i);
-            }
-            if (pair.key() == "dogSpeed") {
-                map_i.SetMapDogSpeed(pair.value().as_double());
-            }
-        }
-        game.AddMap(map_i);
-    }
-}
-
 void SetDogSpeedToGame(const boost::json::value& parsed, model::Game& game) {
     if (parsed.as_object().contains("defaultDogSpeed")) {
         if (parsed.as_object().at("defaultDogSpeed").is_double()) {
