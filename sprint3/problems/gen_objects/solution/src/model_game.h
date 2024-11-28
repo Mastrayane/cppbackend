@@ -8,59 +8,60 @@
 
 namespace model {
 
-bool CheckIfMovedProperly(std::set<std::shared_ptr<Road>>& roads, ParamPairDouble& new_pos);
-void SetMaxMoveForTick(std::set<std::shared_ptr<Road>>& roads, ParamPairDouble& new_pos);
-RoadArea CreateMaxMovingCoords(std::set<std::shared_ptr<Road>>& roads);
+    bool CheckIfMovedProperly(std::set<std::shared_ptr<Road>>& roads, ParamPairDouble& new_pos);
+    void SetMaxMoveForTick(std::set<std::shared_ptr<Road>>& roads, ParamPairDouble& new_pos);
+    RoadArea CreateMaxMovingCoords(std::set<std::shared_ptr<Road>>& roads);
 
-class GameSession {
-    GameSession(const GameSession&) = delete;
-    GameSession& operator=(const GameSession&) = delete;
+    class GameSession {
+        GameSession(const GameSession&) = delete;
+        GameSession& operator=(const GameSession&) = delete;
 
-public:
-    explicit GameSession(std::shared_ptr<Map> map) :
-        map_(map) {}
+    public:
+        explicit GameSession(std::shared_ptr<Map> map) :
+            map_(map) {
+        }
 
-    std::shared_ptr<Map> GetMap() const;
-    void AddDog(std::shared_ptr<Dog> dog, bool random_position);
-    void UpdateDogsPosition(const double dt);
-    const std::vector<std::shared_ptr<Dog>> GetDogs();
-    const std::shared_ptr<Dog> GetDog(const Token& token) const;
+        std::shared_ptr<Map> GetMap() const;
+        void AddDog(std::shared_ptr<Dog> dog, bool random_position);
+        void UpdateDogsPosition(const double dt);
+        const std::vector<std::shared_ptr<Dog>> GetDogs();
+        const std::shared_ptr<Dog> GetDog(const Token& token) const;
 
-private:
-    std::shared_ptr<Map> map_;
-    std::vector<std::weak_ptr<Dog>> dogs_;
-};
+    private:
+        std::shared_ptr<Map> map_;
+        std::vector<std::weak_ptr<Dog>> dogs_;
+    };
 
-class Game {
-public:
-    using Maps = std::vector<Map>;
+    class Game {
+    public:
+        using Maps = std::vector<Map>;
 
-    void AddMap(Map map);
-    const Maps& GetMaps() const noexcept;
-    std::shared_ptr<Map> FindMap(const Map::Id& id) const noexcept;
-    std::shared_ptr<GameSession> GetGameSession(const Map::Id& id);
-    void SetDefaultDogSpeed(double speed);
-    double GetDefaultDogSpeed() const;
-    void UpdateGame(const double dt);
-    void PrintMaps();
+        void AddMap(Map map);
+        const Maps& GetMaps() const noexcept;
+        std::shared_ptr<Map> FindMap(const Map::Id& id) const noexcept;
+        std::shared_ptr<GameSession> GetGameSession(const Map::Id& id);
+        void SetDefaultDogSpeed(double speed);
+        double GetDefaultDogSpeed() const;
+        void UpdateGame(const double dt);
+        void PrintMaps();
 
-    void SetLootGeneratorConfig(std::chrono::duration<double> period, double probability) {
-        lootGenerator_ = loot_gen::LootGenerator(period, probability);
-    }
+        void SetLootGeneratorConfig(std::chrono::duration<double> period, double probability) {
+            lootGenerator_ = loot_gen::LootGenerator(std::chrono::duration_cast<std::chrono::milliseconds>(period), probability);
+        }
 
-private:
-    using MapIdHasher = util::TaggedHasher<Map::Id>;
-    using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
+    private:
+        using MapIdHasher = util::TaggedHasher<Map::Id>;
+        using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
 
-    std::vector<Map> maps_;
-    MapIdToIndex map_id_to_index_;
+        std::vector<Map> maps_;
+        MapIdToIndex map_id_to_index_;
 
-    std::vector<std::shared_ptr<GameSession>> game_sessions_;
+        std::vector<std::shared_ptr<GameSession>> game_sessions_;
 
-    double default_dog_speed_ = 1.;
+        double default_dog_speed_ = 1.;
 
-    loot_gen::LootGenerator lootGenerator_;
+        loot_gen::LootGenerator lootGenerator_;
 
-};
+    };
 
 }
