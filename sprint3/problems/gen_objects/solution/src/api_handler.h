@@ -144,7 +144,7 @@ public:
             message = array;
 
             // Логирование ответа
-            std::cout << "Response status: " << http::to_status_class(http::status::ok) << std::endl;
+            std::cout << "Response status: " << statusClassToString(http::to_status_class(http::status::ok)) << std::endl;
 
             return MakeResponse(http::status::ok,
                 json::serialize(message),
@@ -184,7 +184,7 @@ public:
                 message = resp_message;
 
                 // Логирование ответа
-                std::cout << "Response status: " << http::to_status_class(http::status::ok) << std::endl;
+                std::cout << "Response status: " << statusClassToString(http::to_status_class(http::status::ok)) << std::endl;
 
                 return MakeResponse(http::status::ok,
                     json::serialize(message),
@@ -260,7 +260,7 @@ public:
         }
 
         // Логирование ответа
-        std::cout << "Response status: " << http::to_status_class(http::status::ok) << std::endl;
+        std::cout << "Response status: " << statusClassToString(http::to_status_class(http::status::ok)) << std::endl;
 
         return MakeResponse(http::status::ok, 
                             boost::json::serialize(resp), 
