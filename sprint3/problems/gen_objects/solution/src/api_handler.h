@@ -20,30 +20,18 @@ namespace net = boost::asio;
 namespace beast = boost::beast;
 namespace http = beast::http;
 
+ 
+
 namespace http_handler {
 
-
-    std::string statusClassToString(boost::beast::http::status_class status_class) {
-        switch (status_class) {
-        case boost::beast::http::status_class::informational: return "Informational";
-        case boost::beast::http::status_class::successful: return "Successful";
-        case boost::beast::http::status_class::redirection: return "Redirection";
-        case boost::beast::http::status_class::client_error: return "Client Error";
-        case boost::beast::http::status_class::server_error: return "Server Error";
-        default: return "Unknown";
-        }
+    // После отладки удалить
+    namespace LogTest {
+        std::string SSStatusClassToString(boost::beast::http::status_class status_class);
+        std::string TTToString(RequestType type);
     }
+    
 
-    std::string ToString(RequestType type) {
-        switch (type) {
-        case RequestType::API: return "API";
-        case RequestType::PLAYER: return "PLAYER";
-        case RequestType::FILE: return "FILE";
-        default: return "UNKNOWN";
-        }
-    }
-
-
+    
 
 boost::json::value PrepareRoadsForResponse(std::shared_ptr<model::Map> map);
 boost::json::value PrepareBuildingsForResponse(std::shared_ptr<model::Map> map);
@@ -100,7 +88,7 @@ public:
         }
 
         // Логирование ошибки
-        std::cout << "Unknown request type: " << ToString(r_data_.type) << std::endl;
+        std::cout << "Unknown request type: " << LogTest::TTToString(r_data_.type) << std::endl;
 
         return MakeResponse(http::status::bad_request, 
                             Errors::BAD_REQ, 
@@ -146,7 +134,7 @@ public:
             message = array;
 
             // Логирование ответа
-            std::cout << "Response status: " << statusClassToString(http::to_status_class(http::status::ok)) << std::endl;
+            std::cout << "Response status: " << LogTest::SSStatusClassToString(http::to_status_class(http::status::ok)) << std::endl;
 
             return MakeResponse(http::status::ok,
                 json::serialize(message),
@@ -186,7 +174,7 @@ public:
                 message = resp_message;
 
                 // Логирование ответа
-                std::cout << "Response status: " << statusClassToString(http::to_status_class(http::status::ok)) << std::endl;
+                std::cout << "Response status: " << LogTest::SSStatusClassToString(http::to_status_class(http::status::ok)) << std::endl;
 
                 return MakeResponse(http::status::ok,
                     json::serialize(message),
@@ -262,7 +250,7 @@ public:
         }
 
         // Логирование ответа
-        std::cout << "Response status: " << statusClassToString(http::to_status_class(http::status::ok)) << std::endl;
+        std::cout << "Response status: " << LogTest::SSStatusClassToString(http::to_status_class(http::status::ok)) << std::endl;
 
         return MakeResponse(http::status::ok, 
                             boost::json::serialize(resp), 
