@@ -36,5 +36,12 @@ COPY ./data /app/data
 COPY ./static /app/static
 
 # Запускаем игровой сервер
-# ENTRYPOINT ["/app/game_server", "/app/data/config.json", "/app/static"]
-ENTRYPOINT ["/app/game_server","--config-file", "/app/data/config.json", "--www-root", "/app/static",  "--randomize-spawn-points", "1"] 
+ ENTRYPOINT ["/app/game_server", "/app/data/config.json", "/app/static"]
+# ENTRYPOINT ["/app/game_server","--config-file", "/app/data/config.json", "--www-root", "/app/static",  "--randomize-spawn-points", "1"]
+
+ # Устанавливаем переменные окружения
+# ENV TICK_PERIOD=""
+# ENV RANDOMIZE_SPAWN_POINTS=""
+
+# ENTRYPOINT с использованием переменных окружения
+# ENTRYPOINT ["/bin/sh", "-c", "/app/game_server ${TICK_PERIOD} -c /app/data/config.json -w /app/static ${RANDOMIZE_SPAWN_POINTS}"]

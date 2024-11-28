@@ -18,7 +18,7 @@ struct Args {
 
 [[nodiscard]] std::optional<Args> ParseCommandLine(int argc, const char* const argv[]) {
     namespace po = boost::program_options;
-    po::options_description desc{"Allowed options:"};
+    po::options_description desc{ "Allowed options:" };
     Args args;
     desc.add_options()
         ("help,h", "produce help message")
@@ -37,8 +37,15 @@ struct Args {
     }
 
     if (vm.contains("config-file") && vm.contains("www-root")) {
+        // ƒобавл€ем логирование дл€ проверки аргументов
+        std::cout << "Parsed command line arguments:" << std::endl;
+        std::cout << "Config file path: " << args.config_file_path << std::endl;
+        std::cout << "Static root: " << args.static_root << std::endl;
+        std::cout << "Tick period: " << args.tick_period << std::endl;
+        std::cout << "Random spawn: " << args.random_spawn << std::endl;
         return args;
-    } else {
+    }
+    else {
         throw std::runtime_error(R"(Usage: game_server --tick-period[int, optional] 
                                  --config-file <game-config-json> 
                                  --www-root <dir-to-content> 

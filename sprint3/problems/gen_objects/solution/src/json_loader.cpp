@@ -4,8 +4,6 @@ using namespace std::literals;
 
 namespace json_loader {
 
-    using namespace spati_keys;
-
     std::filesystem::path operator""_p(const char* data, std::size_t sz) {
         return std::filesystem::path(data, data + sz);
     }
@@ -16,7 +14,7 @@ namespace json_loader {
         jsonfile.open(filepath);
 
         if (!jsonfile.is_open()) {
-            throw std::runtime_error("Failed to open file");
+            throw std::runtime_error("Failed to open file: " + filepath.string());
         }
 
         std::stringstream buffer;
@@ -33,19 +31,22 @@ namespace json_loader {
 
     void AddRoadsToMap(const boost::json::value& parsed, model::Map& map) {
         for (auto& road : parsed.as_array()) {
-            if (road.as_object().contains(x_end)) {
+
+            //std::cout << "Processing road: " << boost::json::serialize(road) << std::endl;
+
+            if (road.as_object().contains(spati_keys::x_end)) {
                 model::Road road_{ model::Road::HORIZONTAL,
-                        {static_cast<int>(road.as_object().at(x_start).as_int64()),
-                                            static_cast<int>(road.as_object().at(y_start).as_int64())},
-                                            static_cast<int>(road.as_object().at(x_end).as_int64()) };
+                        {static_cast<int>(road.as_object().at(spati_keys::x_start).as_int64()),
+                                            static_cast<int>(road.as_object().at(spati_keys::y_start).as_int64())},
+                                            static_cast<int>(road.as_object().at(spati_keys::x_end).as_int64()) };
                 SetKeySequenceRoad(road, road_);
                 map.AddRoad(road_);
             }
             if (road.as_object().contains("y1")) {
                 model::Road road_{ model::Road::VERTICAL,
-                        {static_cast<int>(road.as_object().at(x_start).as_int64()),
-                                            static_cast<int>(road.as_object().at(y_start).as_int64())},
-                                            static_cast<int>(road.as_object().at(y_end).as_int64()) };
+                        {static_cast<int>(road.as_object().at(spati_keys::x_start).as_int64()),
+                                            static_cast<int>(road.as_object().at(spati_keys::y_start).as_int64())},
+                                            static_cast<int>(road.as_object().at(spati_keys::y_end).as_int64()) };
                 SetKeySequenceRoad(road, road_);
                 map.AddRoad(road_);
             }
@@ -54,10 +55,13 @@ namespace json_loader {
 
     void AddBuildingsToMap(const boost::json::value& parsed, model::Map& map) {
         for (auto& building : parsed.as_array()) {
-            model::Rectangle rect{ {static_cast<int>(building.as_object().at(x_str).as_int64()),
-                                   static_cast<int>(building.as_object().at(y_str).as_int64())},
-                                  {static_cast<int>(building.as_object().at(w_str).as_int64()),
-                                   static_cast<int>(building.as_object().at(h_str).as_int64())} };
+
+            //std::cout << "Processing building: " << boost::json::serialize(building) << std::endl;
+
+            model::Rectangle rect{ {static_cast<int>(building.as_object().at(spati_keys::x_str).as_int64()),
+                                   static_cast<int>(building.as_object().at(spati_keys::y_str).as_int64())},
+                                  {static_cast<int>(building.as_object().at(spati_keys::w_str).as_int64()),
+                                   static_cast<int>(building.as_object().at(spati_keys::h_str).as_int64())} };
             model::Building building_{ rect };
             for (const auto& pair : building.as_object()) {
                 building_.SetKeySequence(pair.key_c_str());
@@ -68,12 +72,15 @@ namespace json_loader {
 
     void AddOfficesToMap(const boost::json::value& parsed, model::Map& map) {
         for (auto& office : parsed.as_array()) {
+
+            //std::cout << "Processing office: " << boost::json::serialize(office) << std::endl;
+
             model::Office::Id id{ office.as_object().at("id").as_string().c_str() };
             model::Office office_{ id,
-                                  {static_cast<int>(office.as_object().at(x_str).as_int64()),
-                                   static_cast<int>(office.as_object().at(y_str).as_int64())},
-                                  {static_cast<int>(office.as_object().at(x_offset).as_int64()),
-                                   static_cast<int>(office.as_object().at(y_offset).as_int64())} };
+                                  {static_cast<int>(office.as_object().at(spati_keys::x_str).as_int64()),
+                                   static_cast<int>(office.as_object().at(spati_keys::y_str).as_int64())},
+                                  {static_cast<int>(office.as_object().at(spati_keys::x_offset).as_int64()),
+                                   static_cast<int>(office.as_object().at(spati_keys::y_offset).as_int64())} };
             for (const auto& pair : office.as_object()) {
                 office_.SetKeySequence(pair.key_c_str());
             } try {
@@ -95,15 +102,30 @@ namespace json_loader {
 
     model::Game LoadGame(const std::filesystem::path& json_path) {
         // Загрузить содержимое файла json_path, например, в виде строки
-        // Распарсить строку как JSON, используя boost::json::parse
-        // Загрузить модель игры из файла
         std::string json_as_string = LoadJsonFileAsString(json_path);
-        boost::json::value parsed_json = boost::json::parse(json_as_string);
+
+        // Добавляем логирование для проверки содержимого файла
+        //std::cout << "Loaded JSON content: " << json_as_string << std::endl;
+
+        boost::json::value parsed_json;
+        try {
+            parsed_json = boost::json::parse(json_as_string);
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Error parsing JSON: " << e.what() << std::endl;
+            throw;
+        }
 
         model::Game game;
 
-        SetDogSpeedToGame(parsed_json.as_object(), game);
-        AddMapsToGame(parsed_json.as_object().at("maps").as_array(), game);
+        try {
+            SetDogSpeedToGame(parsed_json.as_object(), game);
+            AddMapsToGame(parsed_json.as_object().at("maps").as_array(), game);
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Error processing JSON: " << e.what() << std::endl;
+            throw;
+        }
 
         return game;
     }
@@ -126,7 +148,15 @@ namespace json_loader {
             // Добавляем lootTypes
             std::vector<std::string> lootTypes;
             for (const auto& lootType : map.as_object().at("lootTypes").as_array()) {
-                lootTypes.push_back(boost::json::value_to<std::string>(lootType));
+                // Проверяем, что элемент является объектом
+                if (lootType.is_object()) {
+                    // Извлекаем строковое значение из объекта
+                    lootTypes.push_back(lootType.as_object().at("name").as_string().c_str());
+                }
+                else {
+                    // Если элемент не является объектом, добавляем его напрямую
+                    lootTypes.push_back(boost::json::value_to<std::string>(lootType));
+                }
             }
             map_i.AddLootTypes(lootTypes);
 

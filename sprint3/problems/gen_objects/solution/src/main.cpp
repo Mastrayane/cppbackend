@@ -7,6 +7,7 @@
 #include "request_handler.h"
 #include "ticker.h"
 #include "command_line_parser.h"
+#include "logger.h"
 
 using namespace std::literals;
 namespace net = boost::asio;
@@ -40,7 +41,7 @@ int main(int argc, const char* argv[]) {
         }
     }
     catch (const std::exception& ex) {
-        std::cout << "Failed parsing command line arguments" << std::endl;
+        std::cerr << "Failed parsing command line arguments: " << ex.what() << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -48,9 +49,30 @@ int main(int argc, const char* argv[]) {
     logger.Init();
 
     try {
+        // Логирование аргументов командной строки
+
+        /*
+        boost::json::object cmd_args_log;
+        cmd_args_log["config_file_path"] = command_line_args.config_file_path;
+        cmd_args_log["static_root"] = command_line_args.static_root;
+        cmd_args_log["tick_period"] = command_line_args.tick_period;
+        cmd_args_log["random_spawn"] = command_line_args.random_spawn;
+        logger::LogMessageInfo(cmd_args_log, "Parsed command line arguments");
+        */
+        
 
         fs::path config = fs::weakly_canonical(fs::path(auxillary::UrlDecode(command_line_args.config_file_path)));
         fs::path root = fs::weakly_canonical(fs::path(auxillary::UrlDecode(command_line_args.static_root)));
+
+        // Логирование путей к конфигурационному файлу и статическим ресурсам
+
+        /*
+         boost::json::object paths_log;
+        paths_log["config_path"] = config.string();
+        paths_log["static_root_path"] = root.string();
+        logger::LogMessageInfo(paths_log, "Resolved paths");
+        */
+       
 
         const unsigned num_threads = std::thread::hardware_concurrency();
         net::io_context ioc(num_threads);
@@ -70,7 +92,6 @@ int main(int argc, const char* argv[]) {
             );
             gs.SetAutoTicker();
             ticker->Start();
-
         }
 
         const auto address = net::ip::make_address("0.0.0.0");
@@ -81,7 +102,7 @@ int main(int argc, const char* argv[]) {
             if (!ec) {
                 ioc.stop();
             }
-            });
+        });
 
         auto handler = std::make_shared<http_handler::RequestHandler>(ioc, gs, api_strand);
         http_handler::LoggingRequestHandler<http_handler::RequestHandler> logging_handler{ *handler };
@@ -94,7 +115,7 @@ int main(int argc, const char* argv[]) {
 
         RunWorkers(std::max(1u, num_threads), [&ioc] {
             ioc.run();
-            });
+        });
     }
     catch (const std::exception& ex) {
         logger::LogExit(EXIT_FAILURE, &ex);
@@ -102,5 +123,4 @@ int main(int argc, const char* argv[]) {
     }
     logger::LogExit(0);
     return 0;
-
 }
