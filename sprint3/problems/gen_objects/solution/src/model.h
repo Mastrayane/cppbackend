@@ -136,9 +136,6 @@ public:
     const std::unordered_map<int, std::pair<int, Point>>& GetLostObjects() const;
     const std::vector<std::string>& GetLootTypes() const;
 
-    void AddLootTypes(const std::vector<std::string>& lootTypes);
-    const std::vector<std::string>& GetLootTypes() const;
-
 private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
     Id id_;
