@@ -34,6 +34,8 @@ namespace http_handler {
         }
     }
 
+    std::string toString(RequestType type);
+
 
 
 boost::json::value PrepareRoadsForResponse(std::shared_ptr<model::Map> map);
