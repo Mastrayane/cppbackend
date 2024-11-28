@@ -44,6 +44,10 @@ public:
     void UpdateGame(const double dt);
     void PrintMaps();
 
+    void SetLootGeneratorConfig(std::chrono::duration<double> period, double probability) {
+        lootGenerator_ = loot_gen::LootGenerator(period, probability);
+    }
+
 private:
     using MapIdHasher = util::TaggedHasher<Map::Id>;
     using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
@@ -54,6 +58,8 @@ private:
     std::vector<std::shared_ptr<GameSession>> game_sessions_;
 
     double default_dog_speed_ = 1.;
+
+    loot_gen::LootGenerator lootGenerator_;
 
 };
 

@@ -131,4 +131,56 @@ model::Game LoadGame(const std::filesystem::path& json_path) {
     return game;
 }
 
+void SetLootGeneratorConfig(const boost::json::value& parsed, model::Game& game) {
+    if (parsed.as_object().contains("lootGeneratorConfig")) {
+        auto lootConfig = parsed.as_object().at("lootGeneratorConfig").as_object();
+        double period = lootConfig.at("period").as_double();
+        double probability = lootConfig.at("probability").as_double();
+        game.SetLootGeneratorConfig(std::chrono::duration<double>(period), probability);
+    }
+}
+
+void AddMapsToGame(const boost::json::value& parsed, model::Game& game) {
+    for (auto& map : parsed.as_array()) {
+        model::Map::Id id{ map.as_object().at("id").as_string().c_str() };
+        model::Map map_i = model::Map{ id, map.as_object().at("name").as_string().c_str() };
+        map_i.SetMapDogSpeed(game.GetDefaultDogSpeed());
+
+        // Добавляем lootTypes
+        std::vector<std::string> lootTypes;
+        for (const auto& lootType : map.as_object().at("lootTypes").as_array()) {
+            lootTypes.push_back(boost::json::value_to<std::string>(lootType));
+        }
+        map_i.AddLootTypes(lootTypes);
+
+        for (const auto& pair : map.as_object()) {
+            map_i.SetKeySequence(pair.key_c_str());
+            if (pair.key() == "roads") {
+                AddRoadsToMap(map.as_object().at("roads").as_array(), map_i);
+            }
+            if (pair.key() == "buildings") {
+                AddBuildingsToMap(map.as_object().at("buildings").as_array(), map_i);
+            }
+            if (pair.key() == "offices") {
+                AddOfficesToMap(map.as_object().at("offices").as_array(), map_i);
+            }
+            if (pair.key() == "dogSpeed") {
+                map_i.SetMapDogSpeed(pair.value().as_double());
+            }
+        }
+        game.AddMap(map_i);
+    }
+}
+
+void AddLootTypesToMap(const boost::json::value& parsed, model::Map& map) {
+    std::vector<std::string> lootTypes;
+    for (const auto& lootType : parsed.as_object().at("lootTypes").as_array()) {
+        lootTypes.push_back(boost::json::value_to<std::string>(lootType));
+    }
+    map.AddLootTypes(lootTypes);
+
+    // Добавляем информацию о типах трофеев в extra_data
+    extra_data::AddLootTypesForMap(*map.GetId(), parsed.as_object().at("lootTypes").as_array());
+}
+
 }  // namespace json_loader

@@ -59,12 +59,8 @@ namespace http_handler {
         mapObj["buildings"] = PrepareBuildingsForResponse(map);
         mapObj["offices"] = PrepareOfficesForResponse(map);
 
-        // Добавляем информацию о lootTypes
-        boost::json::array lootTypesArray;
-        for (const auto& lootType : map->GetLootTypes()) {
-            lootTypesArray.push_back(boost::json::value_from(lootType));
-        }
-        mapObj["lootTypes"] = lootTypesArray;
+        // Добавляем информацию о lootTypes из extra_data
+        mapObj["lootTypes"] = extra_data::GetLootTypesForMap(*map->GetId());
 
         return mapObj;
     }
@@ -84,6 +80,14 @@ namespace http_handler {
         stateObj["lostObjects"] = lostObjectsObj;
 
         return stateObj;
+    }
+
+    boost::json::value PrepareLootTypesForResponse(std::shared_ptr<model::Map> map) {
+        boost::json::array lootTypesArray;
+        for (const auto& lootType : map->GetLootTypes()) {
+            lootTypesArray.push_back(boost::json::value_from(lootType));
+        }
+        return lootTypesArray;
     }
 
 } // namespace http_handler

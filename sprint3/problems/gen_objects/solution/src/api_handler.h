@@ -21,6 +21,8 @@ namespace http_handler {
 boost::json::value PrepareRoadsForResponse(std::shared_ptr<model::Map> map);
 boost::json::value PrepareBuildingsForResponse(std::shared_ptr<model::Map> map);
 boost::json::value PrepareOfficesForResponse(std::shared_ptr<model::Map> map);
+boost::json::value PrepareMapForResponse(std::shared_ptr<model::Map> map);
+boost::json::value PrepareLootTypesForResponse(std::shared_ptr<model::Map> map);
 
 class ApiHandler {
 public:
@@ -122,6 +124,10 @@ public:
                     else if (key == "offices") {
                         boost::json::array offices = PrepareOfficesForResponse(map).as_array();
                         resp_message["offices"] = offices;
+                    }
+                    else if (key == "lootTypes") {
+                        boost::json::array lootTypes = PrepareLootTypesForResponse(map).as_array();
+                        resp_message["lootTypes"] = lootTypes;
                     }
                 }
                 message = resp_message;
