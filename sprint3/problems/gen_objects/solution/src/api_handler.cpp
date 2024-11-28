@@ -62,7 +62,10 @@ namespace http_handler {
         // Добавляем информацию о lootTypes
         boost::json::array lootTypesArray;
         for (const auto& lootType : map->GetLootTypes()) {
-            lootTypesArray.push_back(lootType); // Добавляем строки вместо объектов
+
+            lootTypesArray.push_back(boost::json::value_from(lootType));
+            // Добавляем строки вместо объектов
+            // lootTypesArray.push_back(lootType); /
         }
         mapObj["lootTypes"] = lootTypesArray;
 

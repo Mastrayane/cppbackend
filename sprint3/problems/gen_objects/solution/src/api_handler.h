@@ -34,7 +34,14 @@ namespace http_handler {
         }
     }
 
-    std::string toString(RequestType type);
+    std::string ToString(RequestType type) {
+        switch (type) {
+        case RequestType::API: return "API";
+        case RequestType::PLAYER: return "PLAYER";
+        case RequestType::FILE: return "FILE";
+        default: return "UNKNOWN";
+        }
+    }
 
 
 
@@ -93,7 +100,7 @@ public:
         }
 
         // Логирование ошибки
-        std::cout << "Unknown request type: " << toString(r_data_.type) << std::endl;
+        std::cout << "Unknown request type: " << ToString(r_data_.type) << std::endl;
 
         return MakeResponse(http::status::bad_request, 
                             Errors::BAD_REQ, 
