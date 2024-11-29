@@ -110,8 +110,12 @@ namespace http_handler {
         boost::json::array lootTypesArray;
         for (const auto& lootType : map->GetLootTypes()) {
             boost::json::object lootTypeObj;
-            lootTypeObj["name"] = lootType;
-            // Добавьте другие поля, если они есть
+            lootTypeObj["name"] = lootType.name.value_or("");
+            lootTypeObj["file"] = lootType.file.value_or("");
+            lootTypeObj["type"] = lootType.type.value_or("");
+            lootTypeObj["rotation"] = lootType.rotation.value_or(0);
+            lootTypeObj["color"] = lootType.color.value_or("");
+            lootTypeObj["scale"] = lootType.scale.value_or(0.0);
             lootTypesArray.push_back(lootTypeObj);
         }
         return lootTypesArray;

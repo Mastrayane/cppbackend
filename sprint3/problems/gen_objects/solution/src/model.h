@@ -17,11 +17,23 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <optional>
 
-#include <vector>
-#include <random>
+
 
 namespace model {
+
+    using namespace std::literals;
+
+    // Добавляем структуру LootType
+    struct LootType {
+        std::optional<std::string> name;   // example -> = "key";
+        std::optional<std::string> file;   // example -> = "assets/key.obj";
+        std::optional<std::string> type;   // example -> = "obj";
+        std::optional<int> rotation;       // example -> = 90;
+        std::optional<std::string> color;  // example -> = "#338844";
+        std::optional<double> scale;       // example -> = 0.03;
+    };
 
     using namespace std::literals;
     class Element {
@@ -133,10 +145,10 @@ namespace model {
         std::set<std::shared_ptr<Road>> GetRoadsByCoords(Point p) const;
         void PrintCoordToRoad() const;
 
-        void AddLootTypes(const std::vector<std::string>& lootTypes);
+        void AddLootTypes(const std::vector<LootType>& lootTypes);
         void GenerateLoot(std::chrono::milliseconds time_delta);
         const std::unordered_map<int, std::pair<int, Point>>& GetLostObjects() const;
-        const std::vector<std::string>& GetLootTypes() const;
+        const std::vector<LootType>& GetLootTypes() const;
 
     private:
         using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
@@ -153,7 +165,7 @@ namespace model {
 
         std::unordered_map<Point, std::set<std::shared_ptr<Road>>, PointHash> coord_to_road;
 
-        std::vector<std::string> lootTypes_;
+        std::vector<LootType> lootTypes_;
         std::unordered_map<int, std::pair<int, Point>> lostObjects_;
         loot_gen::LootGenerator lootGenerator_;
         std::mt19937 randomGenerator_;

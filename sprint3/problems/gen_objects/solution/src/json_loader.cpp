@@ -146,17 +146,16 @@ namespace json_loader {
             map_i.SetMapDogSpeed(game.GetDefaultDogSpeed());
 
             // Добавляем lootTypes
-            std::vector<std::string> lootTypes;
+            std::vector<model::LootType> lootTypes;
             for (const auto& lootType : map.as_object().at("lootTypes").as_array()) {
-                // Проверяем, что элемент является объектом
-                if (lootType.is_object()) {
-                    // Извлекаем строковое значение из объекта
-                    lootTypes.push_back(lootType.as_object().at("name").as_string().c_str());
-                }
-                else {
-                    // Если элемент не является объектом, добавляем его напрямую
-                    lootTypes.push_back(boost::json::value_to<std::string>(lootType));
-                }
+                model::LootType lootTypeObj;
+                lootTypeObj.name = lootType.as_object().at("name").as_string().c_str();
+                lootTypeObj.file = lootType.as_object().at("file").as_string().c_str();
+                lootTypeObj.type = lootType.as_object().at("type").as_string().c_str();
+                lootTypeObj.rotation = lootType.as_object().at("rotation").as_int64();
+                lootTypeObj.color = lootType.as_object().at("color").as_string().c_str();
+                lootTypeObj.scale = lootType.as_object().at("scale").as_double();
+                lootTypes.push_back(lootTypeObj);
             }
             map_i.AddLootTypes(lootTypes);
 
@@ -180,9 +179,16 @@ namespace json_loader {
     }
 
     void AddLootTypesToMap(const boost::json::value& parsed, model::Map& map) {
-        std::vector<std::string> lootTypes;
+        std::vector<model::LootType> lootTypes;
         for (const auto& lootType : parsed.as_object().at("lootTypes").as_array()) {
-            lootTypes.push_back(boost::json::value_to<std::string>(lootType));
+            model::LootType lootTypeObj;
+            lootTypeObj.name = lootType.as_object().at("name").as_string().c_str();
+            lootTypeObj.file = lootType.as_object().at("file").as_string().c_str();
+            lootTypeObj.type = lootType.as_object().at("type").as_string().c_str();
+            lootTypeObj.rotation = lootType.as_object().at("rotation").as_int64();
+            lootTypeObj.color = lootType.as_object().at("color").as_string().c_str();
+            lootTypeObj.scale = lootType.as_object().at("scale").as_double();
+            lootTypes.push_back(lootTypeObj);
         }
         map.AddLootTypes(lootTypes);
 

@@ -199,7 +199,7 @@ namespace model {
         return map_dog_speed_;
     }
 
-    void Map::AddLootTypes(const std::vector<std::string>& lootTypes) {
+    void Map::AddLootTypes(const std::vector<LootType>& lootTypes) {
         lootTypes_ = lootTypes;
     }
 
@@ -237,7 +237,7 @@ namespace model {
         return lostObjects_;
     }
 
-    const std::vector<std::string>& Map::GetLootTypes() const {
+    const std::vector<LootType>& Map::GetLootTypes() const {
         return lootTypes_;
     }
 
