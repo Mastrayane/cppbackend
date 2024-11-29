@@ -100,32 +100,25 @@ public:
     template <typename Body, typename Allocator>
     http::response<http::string_body> HandleMapRequest(const http::request<Body, http::basic_fields<Allocator>>& req_, const RequestData& r_data_) {
 
-        // Логирование запроса
-        std::cout << "Request method: " << req_.method_string() << std::endl;
-        std::cout << "Request target: " << req_.target() << std::endl;
-
         json::value message;
-        if (req_.method() != http::verb::get) {
 
-            // Логирование ошибки
-            std::cout << "Method not allowed: " << req_.method_string() << std::endl;
+        // Проверка, если метод запроса не GET и не HEAD
+        if (req_.method() != http::verb::get && req_.method() != http::verb::head) {
 
+            // Возвращаем статус 405 Method Not Allowed
             return MakeResponse(http::status::method_not_allowed,
                 Errors::GET_INVALID, req_.version(), req_.keep_alive(),
                 ContentType::JSON,
                 "no-cache"sv, "GET, HEAD"sv);
-        }
+        } else if (r_data_.r_target.empty()) { // Проверка, если цель запроса пуста
 
-        if (r_data_.r_target.empty()) {
-
+            // Возвращаем статус 400 Bad Request
             return MakeResponse(http::status::bad_request,
                 Errors::BAD_REQ,
                 req_.version(), req_.keep_alive(),
                 ContentType::JSON,
                 "no-cache"sv);
-        }
-
-        if (r_data_.r_target == "maps") {
+        } else if (r_data_.r_target == "maps") { // Проверка, если цель запроса равна "maps"
             json::array array;
             for (auto& map : gs_.GetMaps()) {
                 json::value val = { {"id",*map.GetId()}, {"name", map.GetName()} };
@@ -133,9 +126,7 @@ public:
             }
             message = array;
 
-            // Логирование ответа
-            std::cout << "Response status: " << LogTest::SSStatusClassToString(http::to_status_class(http::status::ok)) << std::endl;
-
+            // Возвращаем статус 200 OK с данными о всех картах
             return MakeResponse(http::status::ok,
                 json::serialize(message),
                 req_.version(), req_.keep_alive(),
@@ -145,6 +136,8 @@ public:
             json::object resp_message;
             model::Map::Id id_{ r_data_.r_target };
             std::shared_ptr<model::Map> map = gs_.FindMap(id_);
+
+            // Проверка, если карта найдена
             if (map != nullptr) {
                 std::vector<std::string> keys_in_map = map->GetKeys();
                 for (const auto& key : keys_in_map) {
@@ -173,9 +166,7 @@ public:
                 }
                 message = resp_message;
 
-                // Логирование ответа
-                std::cout << "Response status: " << LogTest::SSStatusClassToString(http::to_status_class(http::status::ok)) << std::endl;
-
+                // Возвращаем статус 200 OK с данными о найденной карте
                 return MakeResponse(http::status::ok,
                     json::serialize(message),
                     req_.version(), req_.keep_alive(),
@@ -184,6 +175,7 @@ public:
 
             }
             else {
+                // Возвращаем статус 404 Not Found, если карта не найдена
                 return MakeResponse(http::status::not_found,
                     Errors::MAP_NOT_FOUND,
                     req_.version(), req_.keep_alive(),
