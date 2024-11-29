@@ -169,15 +169,6 @@ jobs:
         run: |
           cd cpp-backend-tests-practicum/scripts/sprint3
           ./gen_objects/run.sh
-          # Сохраняем результаты тестов
-          mkdir test-results
-          cp cpp-backend-tests-practicum/scripts/sprint3/gen_objects/*.xml test-results/
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-results
-          path: test-results/
     #  - name: run tests sprint3 static_lib
     #    run: |
     #      cd cpp-backend-tests-practicum/scripts/sprint3
