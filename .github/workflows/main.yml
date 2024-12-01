@@ -206,10 +206,10 @@ jobs:
     #    run: |
     #      cd cpp-backend-tests-practicum/scripts/sprint3
     #      ./find_return/run.sh
-    #  - name: run tests sprint3 scores
-    #    run: |
-    #      cd cpp-backend-tests-practicum/scripts/sprint3
-    #      ./scores/run.sh
+      - name: run tests sprint3 scores
+        run: |
+          cd cpp-backend-tests-practicum/scripts/sprint3
+          ./scores/run.sh
       - name: run tests sprint3 ammo
         run: |
           cd cpp-backend-tests-practicum/scripts/sprint3
