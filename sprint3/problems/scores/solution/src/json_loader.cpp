@@ -19,7 +19,7 @@ model::Game LoadGame(const std::filesystem::path& json_path) {
   // open file
   std::ifstream ifs(json_path);
   if (!ifs.is_open()) {
-    throw std::runtime_error(("Fail to open "s).append(json_path));
+      throw std::runtime_error(("Fail to open "s).append(json_path.string()));
   }
 
   // get data from file
