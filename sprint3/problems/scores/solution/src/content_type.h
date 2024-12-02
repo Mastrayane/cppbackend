@@ -2,6 +2,7 @@
 #define __CONTENT_TYPE_H__
 
 #include <string_view>
+#include <string>
 #include <unordered_map>
 
 namespace http_handler {
