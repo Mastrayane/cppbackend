@@ -4,15 +4,18 @@
 #include <chrono>
 #include "logger.h"
 
-Application::Application(boost::asio::io_context &ioc, std::filesystem::path config, std::filesystem::path dir_to_content)
+Application::Application(boost::asio::io_context& ioc, std::filesystem::path config, std::filesystem::path dir_to_content)
     : m_ioc(ioc),
-      dir_to_content_(dir_to_content),
-      strand(boost::asio::make_strand(ioc)),
-      m_manual_ticker(true) {
-  if (!(std::filesystem::exists(config) && std::filesystem::exists(dir_to_content_))) {
-    throw std::logic_error("Wrong path, config="s + config.string() + ", content="s + dir_to_content.string());  //? maybe need more output information
-  }
-  m_game = json_loader::LoadGame(config);
+    dir_to_content_(dir_to_content),
+    strand(boost::asio::make_strand(ioc)),
+    m_manual_ticker(true) {
+    bool configExists = std::filesystem::exists(config);
+    bool contentDirExists = std::filesystem::exists(dir_to_content_);
+
+    if (!configExists || !contentDirExists) {
+        throw std::logic_error("Wrong path, config="s + config.string() + ", content="s + dir_to_content.string());  //? maybe need more output information
+    }
+    m_game = json_loader::LoadGame(config);
 }
 
 Application::~Application() {

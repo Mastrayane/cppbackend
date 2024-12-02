@@ -108,36 +108,39 @@ StringResponse ApiHandler::PlayerJoinRequest() {
 }
 
 StringResponse ApiHandler::PlayerListRequest() {
-  if (!(m_req.method() == http::verb::get || m_req.method() == http::verb::head)) {
-    return MakeJsonResponse(http::status::method_not_allowed,
-                            JsAnswer("invalidMethod", "Invalid method"),
-                            CacheControl::NO_CACHE,
-                            "GET, HEAD"sv);
-  }
-
-  return ExecuteAuthorized([this](model::Player &p) {
-    boost::json::object js_response{};
-    for (auto it = m_app.GetPlayers().cbegin(); it != m_app.GetPlayers().cend(); ++it) {
-      if (it->second.GetSession() == p.GetSession())
-        js_response[std::to_string(it->second.GetId())] = {{"name", it->second.GetName()}};
+    bool isGetOrHead = (m_req.method() == http::verb::get || m_req.method() == http::verb::head);
+    if (!isGetOrHead) {
+        return MakeJsonResponse(http::status::method_not_allowed,
+            JsAnswer("invalidMethod", "Invalid method"),
+            CacheControl::NO_CACHE,
+            "GET, HEAD"sv);
     }
 
-    if(js_response.empty()) {
-      throw std::logic_error("Response can not be empty in Player List request");
-    }
+    return ExecuteAuthorized([this](model::Player& p) {
+        boost::json::object js_response{};
+        for (auto it = m_app.GetPlayers().cbegin(); it != m_app.GetPlayers().cend(); ++it) {
+            if (it->second.GetSession() == p.GetSession())
+                js_response[std::to_string(it->second.GetId())] = { {"name", it->second.GetName()} };
+        }
 
-    return MakeJsonResponse(http::status::ok,
-                            js_response,
-                            CacheControl::NO_CACHE); });
+        if (js_response.empty()) {
+            throw std::logic_error("Response can not be empty in Player List request");
+        }
+
+        return MakeJsonResponse(http::status::ok,
+            js_response,
+            CacheControl::NO_CACHE);
+        });
 }
 
 StringResponse ApiHandler::GetGameState() {
-  if (!(m_req.method() == http::verb::get || m_req.method() == http::verb::head)) {
-    return MakeJsonResponse(http::status::method_not_allowed,
-                            JsAnswer("invalidMethod", "Invalid method"),
-                            CacheControl::NO_CACHE,
-                            "GET, HEAD"sv);
-  }
+    bool isGetOrHead = (m_req.method() == http::verb::get || m_req.method() == http::verb::head);
+    if (!isGetOrHead) {
+        return MakeJsonResponse(http::status::method_not_allowed,
+            JsAnswer("invalidMethod", "Invalid method"),
+            CacheControl::NO_CACHE,
+            "GET, HEAD"sv);
+    }
 
   return ExecuteAuthorized([this](model::Player &player) {
     boost::json::object js_response{};

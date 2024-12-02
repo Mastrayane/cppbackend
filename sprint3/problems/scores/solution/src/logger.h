@@ -18,6 +18,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <cstdint>  // Для int64_t и uint64_t
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(additional_data, "AdditionalData", boost::json::value);
 BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp, "TimeStamp", boost::posix_time::ptime);
@@ -56,9 +57,6 @@ class LogRequestHandler {
         // ip — IP-адрес клиента (полученный через endpoint.address().to_string()),
         // URI — запрошенный адрес,
         // method — использованный метод HTTP.
-        std::string host = static_cast<std::string>(req.at(http::field::host));
-        host = host.substr(0, host.rfind(':'));
-
         boost::json::object obj{
             {"ip", endp.address().to_string()},
             {"URI", req.target()},
@@ -66,7 +64,7 @@ class LogRequestHandler {
         BOOST_LOG_TRIVIAL(info) << boost::log::add_value(additional_data, obj) << "request received"sv;
     }
 
-    static void LogResponse(long long delta, int code, std::string content) {
+    static void LogResponse(int64_t delta, int code, std::string content) {
         // message — строка response sent
         // data — объект с полями:
         // response_time — время формирования ответа в миллисекундах (целое число).
@@ -84,7 +82,7 @@ class LogRequestHandler {
     }
 
 public:
-    LogRequestHandler(RequestHandler& h) : decorated_(h) {}
+    explicit LogRequestHandler(RequestHandler& h) : decorated_(h) {}
 
     template <typename Body, typename Allocator, typename Send>
     void operator()(const boost::asio::ip::tcp::endpoint& endp, http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
