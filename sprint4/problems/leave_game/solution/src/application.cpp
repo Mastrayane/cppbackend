@@ -16,11 +16,10 @@ Application::Application(boost::asio::io_context &ioc, const c_parse::Args &args
       m_dir_to_content(args.www_root),
       m_state_file(args.state_file) {
   // required pathes
-    bool configExists = std::filesystem::exists(config);
-    bool contentDirExists = std::filesystem::exists(dir_to_content_);
+    bool both_files_exist = std::filesystem::exists(args.config_file) && std::filesystem::exists(args.www_root);
 
-    if (!configExists || !contentDirExists) {
-        throw std::logic_error("Wrong path, config="s + config.string() + ", content="s + dir_to_content.string());  //? maybe need more output information 
+    if (!both_files_exist) {
+        throw std::logic_error("Wrong path, config="s + args.config_file + ", content="s + args.www_root);
     }
 
   // create game form json config
