@@ -106,71 +106,80 @@ StringResponse ApiHandler::PlayerJoinRequest() {
   const model::Player &player = m_app.JoinGame(model::Map::Id(map_id), user_name);
   js_response = {
       {"authToken", *player.GetToken()},
-      {"playerId", *player.GetId()}};
+      {"playerId", *player.GetId()}
+  };
 
   return MakeJsonResponse(http::status::ok, js_response, CacheControl::NO_CACHE);
 }
 
 StringResponse ApiHandler::PlayerListRequest() {
-  if (!(m_req.method() == http::verb::get || m_req.method() == http::verb::head)) {
-    return MakeJsonResponse(http::status::method_not_allowed,
-                            JsAnswer("invalidMethod", "Invalid method"),
-                            CacheControl::NO_CACHE,
-                            "GET, HEAD"sv);
-  }
 
-  return ExecuteAuthorized([this](model::Player &p) {
-    boost::json::object js_response{};
-    for (auto it = m_app.GetPlayers().cbegin(); it != m_app.GetPlayers().cend(); ++it) {
-      if (it->second.GetSession() == p.GetSession())
-        js_response[std::to_string(*it->second.GetId())] = {{"name", it->second.GetName()}};
+    bool isGetOrHead = (m_req.method() == http::verb::get || m_req.method() == http::verb::head);
+
+    if (!isGetOrHead) {
+        return MakeJsonResponse(http::status::method_not_allowed,
+            JsAnswer("invalidMethod", "Invalid method"),
+            CacheControl::NO_CACHE,
+            "GET, HEAD"sv);
     }
 
-    if(js_response.empty()) {
-      throw std::logic_error("Response can not be empty in Player List request");
-    }
+    return ExecuteAuthorized([this](model::Player& p) {
+        boost::json::object js_response{};
+        for (auto it = m_app.GetPlayers().cbegin(); it != m_app.GetPlayers().cend(); ++it) {
+            if (it->second.GetSession() == p.GetSession())
+                js_response[std::to_string(it->second.GetId())] = { {"name", it->second.GetName()} };
+        }
 
-    return MakeJsonResponse(http::status::ok,
-                            js_response,
-                            CacheControl::NO_CACHE); });
+        if (js_response.empty()) {
+            throw std::logic_error("Response can not be empty in Player List request");
+        }
+
+        return MakeJsonResponse(http::status::ok,
+            js_response,
+            CacheControl::NO_CACHE);
+    });
 }
 
 StringResponse ApiHandler::GetGameState() {
-  if (!(m_req.method() == http::verb::get || m_req.method() == http::verb::head)) {
-    return MakeJsonResponse(http::status::method_not_allowed,
-                            JsAnswer("invalidMethod", "Invalid method"),
-                            CacheControl::NO_CACHE,
-                            "GET, HEAD"sv);
-  }
 
-  return ExecuteAuthorized([this](model::Player &player) {
-    boost::json::object js_response{};
-    boost::json::object js_players{};  // part of response
-    boost::json::object js_lost_loots{};  // part of response
+    bool isGetOrHead = (m_req.method() == http::verb::get || m_req.method() == http::verb::head);
 
-    // get list of players  //! mayby concurency
-    for (auto it = m_app.GetPlayers().cbegin(); it != m_app.GetPlayers().cend(); ++it) {
-      if (it->second.GetSession() == player.GetSession()) {
-        assert(it->second.GetDog() != nullptr);
-        js_players[std::to_string(*it->second.GetId())] = boost::json::value_from(*it->second.GetDog());
-      }
+    if (!isGetOrHead) {
+        return MakeJsonResponse(http::status::method_not_allowed,
+            JsAnswer("invalidMethod", "Invalid method"),
+            CacheControl::NO_CACHE,
+            "GET, HEAD"sv);
     }
 
-    // get list of loot
-    const auto& sess = player.GetSession();
-    for(const auto& loot : sess->GetLoots()) {
-      js_lost_loots[std::to_string(loot.GetId())] = {{"type", loot.GetLootType().type_num}, {
-        "pos", {loot.GetPosition().x, loot.GetPosition().y}
-      }};
-    }
+    return ExecuteAuthorized([this](model::Player& player) {
+        boost::json::object js_response{};
+        boost::json::object js_players{};  // part of response 
+        boost::json::object js_lost_loots{};  // part of response 
 
-    // formation of the response
-    js_response["players"] = js_players;
-    js_response["lostObjects"] = js_lost_loots;
+        // get list of players 
+        for (auto it = m_app.GetPlayers().cbegin(); it != m_app.GetPlayers().cend(); ++it) {
+            if (it->second.GetSession() == player.GetSession()) {
+                assert(it->second.GetDog() != nullptr);
+                js_players[std::to_string(it->second.GetId())] = boost::json::value_from(*it->second.GetDog());
+            }
+        }
 
-    return MakeJsonResponse(http::status::ok,
-                            js_response,
-                            CacheControl::NO_CACHE); });
+        // get list of loot 
+        const auto& sess = player.GetSession();
+        for (const auto& loot : sess->GetLoots()) {
+            js_lost_loots[std::to_string(loot.GetId())] = { {"type", loot.GetLootType().type_num}, {
+                "pos", {loot.GetPosition().x, loot.GetPosition().y}
+            } };
+        }
+
+        // formation of the response 
+        js_response["players"] = js_players;
+        js_response["lostObjects"] = js_lost_loots;
+
+        return MakeJsonResponse(http::status::ok,
+            js_response,
+            CacheControl::NO_CACHE);
+    });
 }
 
 StringResponse ApiHandler::PostAction() {
