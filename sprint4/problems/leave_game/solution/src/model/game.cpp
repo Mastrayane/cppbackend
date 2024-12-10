@@ -33,7 +33,7 @@ void Game::AddMap(Map map) {
 Game::SessPtr Game::GetSession(const model::Map::Id& id) {
     auto map = FindMap(id);
     if (!map) {
-        throw std::invalid_argument("Map with id " + std::to_string(*id) + " does not exist");
+        throw std::invalid_argument("Map"s + *id + "id not exist"s);
     }
 
     // if session exist? find and return
