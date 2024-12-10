@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <algorithm>
 namespace model {
 using namespace std::string_literals;
 
