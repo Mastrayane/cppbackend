@@ -30,27 +30,28 @@ void Game::AddMap(Map map) {
 }
 
 Game::SessPtr Game::GetSession(const model::Map::Id& id) {
-  auto map = FindMap(id);
-  if (!map) {
-    throw std::invalid_argument("Map"s + *id + "id not exist"s);
-  }
-
-  // if session exist? find and return
-  for (const auto& sess : m_sess) {
-    if (sess->GetMap().GetId() == id) {
-      return sess;
+    auto map = FindMap(id);
+    if (!map) {
+        throw std::invalid_argument("Map with id " + std::to_string(*id) + " does not exist");
     }
-  }
 
-  std::chrono::milliseconds ms(static_cast<int>(m_period_loot_gen * 1000));
+    // if session exist? find and return
+    auto sess_it = std::find_if(m_sess.begin(), m_sess.end(), [&id](const SessPtr& sess) {
+        return sess->GetMap().GetId() == id;
+        });
 
-  // creat ne session if fail to find exist
-  auto sess = std::make_shared<GameSession>(*map, LootGenerator(ms, m_probability_loot_gen));
-  sess->SetDogRandomSpawn(m_random_dog_spawn);
-  sess->SetRetirementTime(m_dog_retirement_time);
-  m_sess.push_back(sess);
+    if (sess_it != m_sess.end()) {
+        return *sess_it;
+    }
 
-  return sess;
+    // creat ne session if fail to find exist
+    std::chrono::milliseconds ms(static_cast<int>(m_period_loot_gen * 1000));
+    auto sess = std::make_shared<GameSession>(*map, LootGenerator(ms, m_probability_loot_gen));
+    sess->SetDogRandomSpawn(m_random_dog_spawn);
+    sess->SetRetirementTime(m_dog_retirement_time);
+    m_sess.push_back(sess);
+
+    return sess;
 }
 
 void Game::Update(std::chrono::milliseconds delta_time) {
