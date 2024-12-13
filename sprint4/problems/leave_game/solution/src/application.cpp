@@ -16,9 +16,11 @@ Application::Application(boost::asio::io_context &ioc, const c_parse::Args &args
       m_dir_to_content(args.www_root),
       m_state_file(args.state_file) {
   // required pathes
-  if (!(std::filesystem::exists(args.config_file) && std::filesystem::exists(args.www_root))) {
-    throw std::logic_error("Wrong path, config="s + args.config_file + ", content="s + args.www_root);  //? maybe need more output information
-  }
+    bool both_files_exist = std::filesystem::exists(args.config_file) && std::filesystem::exists(args.www_root);
+
+    if (!both_files_exist) {
+        throw std::logic_error("Wrong path, config="s + args.config_file + ", content="s + args.www_root);
+    }
 
   // create game form json config
   m_game = json_loader::LoadGame(args.config_file);
