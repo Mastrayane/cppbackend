@@ -73,9 +73,8 @@ namespace http_handler {
             if (map) {
                 return MakeJsonResponse(http::status::ok, json::value_from(*map), CacheControl::NO_CACHE);
             }
-            else {
-                return MakeJsonResponse(http::status::not_found, JsAnswer("mapNotFound", "Map not found"));
-            }
+
+            return MakeJsonResponse(http::status::not_found, JsAnswer("mapNotFound", "Map not found"));
         }
 
         // fail map request
