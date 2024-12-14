@@ -264,9 +264,6 @@ Map tag_invoke(value_to_tag<Map>, value const& jv) {
       for (auto lootType : i->value().as_array()) {
         map.AddLootType(value_to<LootType>(lootType));
       }
-    } else {
-      // throw std::logic_error(
-      //     std::string("Found unknon key").append(i->key_c_str()));
     }
   }
   return map;
@@ -306,27 +303,19 @@ Game tag_invoke(value_to_tag<Game>, value const& jv) {
 
   if (jv.as_object().contains(MapKey::defaultDogSpeed)) {
     game.SetDefaultSpeed(jv.as_object().at(MapKey::defaultDogSpeed).as_double());
-  } else {
-    // game.SetDefaultSpeed(1.0);
-  }
+  } 
 
   if (jv.as_object().contains(MapKey::dogRetirementTime)) {
     game.SetDogRetirementTime(jv.as_object().at(MapKey::dogRetirementTime).as_double());
-  } else {
-    // game.SetDefaultSpeed(1.0);
-  }
+  } 
 
   if (jv.as_object().contains(MapKey::defaultBagCapacity)) {
     game.SetDefaultBagCapacity(jv.as_object().at(MapKey::defaultBagCapacity).as_int64());
-  } else {
-    // game.SetDefaultBagCapacity(3);
-  }
+  } 
 
   if (jv.as_object().contains(MapKey::lootGeneratorConfig)) {
     auto& loot = jv.as_object().at(MapKey::lootGeneratorConfig);
     game.SetLootGeneratorConfig(loot.at(MapKey::period).as_double(), loot.at(MapKey::probability).as_double());
-  } else {
-    // assert(!"no loot config");
   }
 
   auto maps = jv.as_object().at(MapKey::maps).as_array();
