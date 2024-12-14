@@ -46,32 +46,8 @@ class GameSessionSer {
     }
   }
 
-  /** /
-  template <class Archive>
-  void save(Archive& ar, const unsigned int version) const {
-
-    ar << map_id;
-    ar << m_players;
-    ar << m_loots;
-  }
-
-  template <class Archive>
-  void load(Archive& ar, const unsigned int version) {
-
-    ar >> map_id;
-    ar >> m_players;
-    ar >> m_loots;
-
-    // requre same size
-    if (map_id.size() == m_players.size()) {
-      throw std::logic_error("serialization logic error");
-    }
-  }
-  /**/
-
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
-    // boost::serialization::split_member(ar, *this, file_version);
     ar & map_id;
     ar & m_players;
     ar & m_loots;

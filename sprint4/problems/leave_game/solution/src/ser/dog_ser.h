@@ -22,7 +22,7 @@ void save_construct_data(Archive& ar, const Dog* t, const unsigned int file_vers
   ar << t->GetWidth();
   ar << t->GetBagSize();
   ar << t->GetLoots();
-  ///ar << boost::serialization::base_object<GameObject>(t);
+  
 }
 
 template <typename Archive>
@@ -54,7 +54,6 @@ void load_construct_data(Archive& ar, Dog* t, const unsigned int file_version) {
     t->AddLoot(loot);
   }
 
-  ///ar >> boost::serialization::base_object<GameObject>(t);
 }
 
 template <typename Archive>
