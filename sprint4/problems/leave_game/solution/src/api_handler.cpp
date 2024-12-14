@@ -220,7 +220,7 @@ namespace http_handler {
             return MakeJsonResponse(http::status::method_not_allowed, JsAnswer("invalidMethod", "Only POST method is expected"), CacheControl::NO_CACHE, "POST"sv);
         }
 
-        int64_t ms;
+        int64_t ms = 0;
         // check parsing
         try {
             boost::json::value jv = boost::json::parse(m_req.body());
