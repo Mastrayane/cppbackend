@@ -178,7 +178,10 @@ void Application::LoadState(const std::filesystem::path &path) {
 }
 
 std::vector<model::PlayerInfo> Application::GetPlayerInfoList(size_t start, size_t max_items) {
-  assert(max_items <= dbconn::ConnectionFactory::MaxItemReq);
+    if (max_items > dbconn::ConnectionFactory::MaxItemReq) {
+        throw std::invalid_argument("max_items exceeds the maximum allowed value");
+    }
+
   std::vector<model::PlayerInfo> players;
   players.reserve(dbconn::ConnectionFactory::MaxItemReq);
 
