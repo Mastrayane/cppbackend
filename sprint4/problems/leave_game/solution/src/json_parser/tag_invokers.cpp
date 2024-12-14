@@ -63,8 +63,8 @@ void tag_invoke(value_from_tag, value& jv, Map const& map) {
   // loot types parse
   if (!map.GetLootTypes().empty()) {
     array arr{};
-    for (auto& i : map.GetLootTypes()) {
-      arr.push_back(value_from(i));
+    for (const auto& loot_type : map.GetLootTypes()) {
+      arr.push_back(value_from(loot_type));
     }
     obj[MapKey::lootTypes] = value_from(arr);
   }
@@ -72,8 +72,8 @@ void tag_invoke(value_from_tag, value& jv, Map const& map) {
   // road parse
   if (!map.GetRoads().empty()) {
     array arr{};
-    for (auto& i : map.GetRoads()) {
-      arr.push_back(value_from(i));
+    for (const auto& road : map.GetRoads()) {
+      arr.push_back(value_from(road));
     }
 
     obj[MapKey::roads] = value_from(arr);
@@ -82,8 +82,8 @@ void tag_invoke(value_from_tag, value& jv, Map const& map) {
   // building parse
   if (!map.GetBuildings().empty()) {
     array arr{};
-    for (auto& i : map.GetBuildings()) {
-      arr.push_back(value_from(i));
+    for (const auto& building : map.GetBuildings()) {
+        arr.push_back(value_from(building));
     }
     obj[MapKey::buildings] = value_from(arr);
   }
@@ -91,7 +91,7 @@ void tag_invoke(value_from_tag, value& jv, Map const& map) {
   // office parse
   if (!map.GetOffices().empty()) {
     array arr{};
-    for (auto& office : map.GetOffices()) {
+    for (const auto& office : map.GetOffices()) {
       arr.push_back(value_from(office));
     }
     obj[MapKey::offices] = value_from(arr);
